@@ -32,7 +32,20 @@ export default function HomePageComponent() {
       href: "/invoice",
       color: "bg-orange-500 hover:bg-orange-600",
     },
+    {
+      title: "برداشت ریالی",
+      icon: <FileText className="w-8 h-8" />,
+      href: "/withdraw",
+      color: "bg-teal-500 hover:bg-teal-600", // سبز آبی خاص
+    },
+    {
+      title: "تحویل طلا",
+      icon: <FileText className="w-8 h-8" />,
+      href: "/gold-delivery",
+      color: "bg-yellow-500 hover:bg-yellow-600 text-white font-bold", // طلایی
+    },
   ];
+
 
   return (
     <div className="min-h-screen bg-gray-100 font-['iransans']">
