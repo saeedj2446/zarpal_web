@@ -2,17 +2,18 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/radix/avatar";
 import { Card, CardContent } from "@/components/radix/card";
 import { Badge } from "@/components/radix/badge";
 import { Eye } from "lucide-react";
+import Link from "next/link";
 
 export default function DashboardPage() {
   const menuItems = [
     {
       title: "واریز",
       items: [
-        { name: "فرم پرداخت", icon: "📋" },
+        { name: "فرم پرداخت", icon: "📋", href: "/request-payment" },
         { name: "کارخوان", icon: "🧮" },
         { name: "درگاه پرداخت", icon: "🏪" },
         { name: "اسکن QR", icon: "⬜" },
-        { name: "لینک پرداخت", icon: "💳" },
+        { name: "لینک پرداخت", icon: "💳", href: "/payment" },
       ],
     },
     {
@@ -104,15 +105,21 @@ export default function DashboardPage() {
                 <div className="h-px bg-[#a85a7a] flex-1 mx-4"></div>
               </div>
               <div className="grid grid-cols-5 gap-3">
-                {section.items.map((item, itemIndex) => (
-                  <button
-                    key={itemIndex}
-                    className="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col items-center gap-2 text-center"
-                  >
-                    <div className="text-2xl">{item.icon}</div>
-                    <span className="text-xs text-gray-700">{item.name}</span>
-                  </button>
-                ))}
+                {section.items.map((item, itemIndex) => {
+                  const ButtonComponent = item.href ? Link : "button";
+                  const buttonProps = item.href ? { href: item.href } : {};
+
+                  return (
+                    <ButtonComponent
+                      key={itemIndex}
+                      {...buttonProps}
+                      className="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col items-center gap-2 text-center"
+                    >
+                      <div className="text-2xl">{item.icon}</div>
+                      <span className="text-xs text-gray-700">{item.name}</span>
+                    </ButtonComponent>
+                  );
+                })}
               </div>
             </div>
           ))}

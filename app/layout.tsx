@@ -21,7 +21,7 @@ export default function RootLayout({
   return (
       <html lang="fa" dir="rtl" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body className={GeistSans.className}>
-      <Script src="https://api.tempo.build/proxy-asset?url=https://storage.googleapis.com/tempo-public-assets/error-handling.js" />
+      {/* <Script src="https://api.tempo.build/proxy-asset?url=https://storage.googleapis.com/tempo-public-assets/error-handling.js" /> [deprecated] */}
       <AppProviders>{children}</AppProviders>
       </body>
       </html>
