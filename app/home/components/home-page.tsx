@@ -94,9 +94,9 @@ export default function HomePageComponent() {
         </Card>
 
         {/* Menu Buttons */}
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
           {menuItems.map((item, index) => (
-            <Link key={index} href={item.href}>
+            <Link key={index} href={item.href} className={' max-w-[260px]'}>
               <Button
                 className={`w-full h-32 ${item.color} text-white rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-105 flex flex-col items-center justify-center gap-3`}
               >

@@ -23,7 +23,7 @@ export default function RequestPaymentPage() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-[400px] mx-auto p-4">
+      <div className="max-w-[800px] mx-auto p-4">
         {/* Business Card */}
         <Card className="mb-6 overflow-hidden border-2 border-gray-300 rounded-2xl">
           <div className="bg-black text-white p-3 flex items-center justify-between">
