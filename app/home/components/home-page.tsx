@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/radix/card";
 import { Button } from "@/components/radix/button";
 import { Eye, Receipt, CreditCard, List, FileText } from "lucide-react";
 import Link from "next/link";
+import {ThemeToggle} from "@/components/radix/theme-toggle";
 
 export default function HomePageComponent() {
   const menuItems = [
@@ -58,9 +59,11 @@ export default function HomePageComponent() {
           </Avatar>
           <span className="text-lg">ابراهیم اصغری پور نیا</span>
         </div>
+       {/* <ThemeToggle/>*/}
         <div className="bg-white/20 rounded-full w-10 h-10 flex items-center justify-center">
           <span className="text-sm font-bold">۱۸</span>
         </div>
+
       </div>
 
       {/* Main Content */}

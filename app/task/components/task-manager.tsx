@@ -71,7 +71,7 @@ export function TaskManager() {
                   <Button
                       variant="ghost"
                       size="sm"
-                      onClick={handleRefresh}
+                      //onClick={handleRefresh}
                       disabled={isLoading}
                       className="h-8 w-8 p-0 hover:bg-primary/10 transition-all duration-200"
                   >

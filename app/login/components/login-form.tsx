@@ -8,8 +8,6 @@ import { Button } from "@/components/radix/button";
 import { Input } from "@/components/radix/input";
 import {
   Card,
-  CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/radix/card";
@@ -18,17 +16,18 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/radix/form";
 import { loginSchema, type LoginFormData } from "@/lib/validations/auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useAuth } from "@/lib/hooks/useAuth";
+
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { login, isLoggingIn } = useAuth();
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -36,56 +35,64 @@ export function LoginForm() {
       phone: "",
       password: "",
     },
+    mode: "all", // ✅ ولیدیشن همزمان با تایپ و روی submit
   });
 
   const onSubmit = async (data: LoginFormData) => {
-    setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log("Login data:", data);
-      // Redirect to home page after successful login
-      router.push("/");
-    } catch (error) {
+      const loginData = {
+        username: data.phone,
+        password: data.password,
+      };
+
+      await login(loginData);
+      router.push("/"); // ریدایرکت بعد از ورود موفق
+    } catch (error: any) {
       console.error("Login error:", error);
-    } finally {
-      setIsLoading(false);
+      alert(error?.message || "خطای ورود رخ داد");
     }
   };
 
   return (
-    <div className="bg-white min-h-screen">
-      <Card className="bg-white border-0 rounded-none shadow-none max-w-md mx-auto mt-1 p-1">
-        <CardHeader className="relative w-full h-60 mb-1">
-          <Image
-              src="/images/logo.png"
-              alt="Logo"
-              fill
-              style={{ objectFit: "contain" }}
-          />
-        </CardHeader>
+      <div className="bg-white min-h-screen flex items-center justify-center">
+        <Card className="max-w-md w-full p-6 bg-white rounded-xl shadow-md">
+          <CardHeader className="relative w-full h-40 mb-6">
+            <Image
+                src="/images/logo.png"
+                alt="Logo"
+                fill
+                style={{ objectFit: "contain" }}
+            />
+          </CardHeader>
 
+          <CardTitle className="text-2xl font-bold mb-6 text-center">
+            ورود به حساب کاربری
+          </CardTitle>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2 bg-gray-100 py-10 px-6 rounded-[12px]">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+
               {/* شماره همراه */}
               <FormField
                   control={form.control}
                   name="phone"
-                  render={({field}) => (
+                  render={({ field, fieldState }) => (
                       <FormItem>
                         <FormControl>
                           <div className="relative">
-                            <Phone className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 h-6 w-6"/>
+                            <Phone className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 h-6 w-6" />
                             <Input
                                 {...field}
                                 type="tel"
                                 placeholder="شماره همراه"
-                                className="pr-14 h-14 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 text-lg text-right bg-gray-50"
+                                className="pr-14 h-14 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 text-lg text-right"
                                 dir="rtl"
                             />
                           </div>
                         </FormControl>
+                        <FormMessage className="text-right text-red-500 text-sm">
+                          {fieldState.error?.message}
+                        </FormMessage>
                       </FormItem>
                   )}
               />
@@ -94,16 +101,16 @@ export function LoginForm() {
               <FormField
                   control={form.control}
                   name="password"
-                  render={({field}) => (
+                  render={({ field, fieldState }) => (
                       <FormItem>
                         <FormControl>
                           <div className="relative">
-                            <Lock className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 h-6 w-6"/>
+                            <Lock className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 h-6 w-6" />
                             <Input
                                 {...field}
                                 type={showPassword ? "text" : "password"}
                                 placeholder="کلمه عبور"
-                                className="pr-14 pl-14 h-14 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 text-lg text-right bg-gray-50"
+                                className="pr-14 pl-14 h-14 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 text-lg text-right"
                                 dir="rtl"
                             />
                             <button
@@ -111,23 +118,26 @@ export function LoginForm() {
                                 onClick={() => setShowPassword(!showPassword)}
                                 className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                             >
-                              {showPassword ? <EyeOff className="h-6 w-6"/> : <Eye className="h-6 w-6"/>}
+                              {showPassword ? <EyeOff className="h-6 w-6" /> : <Eye className="h-6 w-6" />}
                             </button>
                           </div>
                         </FormControl>
+                        <FormMessage className="text-right text-red-500 text-sm">
+                          {fieldState.error?.message}
+                        </FormMessage>
                       </FormItem>
                   )}
               />
 
-
               <Button
                   type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-[#A45C70] text-white font-bold py-7 text-lg rounded-xl"
+                  disabled={isLoggingIn}
+                  className="w-full bg-[#A45C70] text-white font-bold py-6 text-lg rounded-xl"
               >
-                {isLoading ? "در حال ورود..." : "ورود"}
+                {isLoggingIn ? "در حال ورود..." : "ورود"}
               </Button>
-              <div className="flex justify-between text-lg pt-6">
+
+              <div className="flex justify-between text-lg pt-4">
                 <Link href="/forgot-password" className="text-gray-600 hover:text-gray-800">
                   بازیابی کلمه عبور
                 </Link>
@@ -137,9 +147,7 @@ export function LoginForm() {
               </div>
             </form>
           </Form>
-
-
-      </Card>
-    </div>
+        </Card>
+      </div>
   );
 }

@@ -25,7 +25,7 @@ import { useAppDispatch } from "../../../lib/hooks/redux"
 import { toggleTodo } from "../../../lib/store/slices/todoSlice"
 import { updateTodoSchema, type UpdateTodoFormData } from "../../../lib/validations/todo"
 import type { Todo } from "../../../lib/types"
-import { cn } from "../../../lib/utils"
+import { cn } from "../../../lib/utils/utils"
 
 interface TaskItemProps {
   todo: Todo

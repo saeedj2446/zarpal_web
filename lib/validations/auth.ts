@@ -9,13 +9,22 @@ export const loginSchema = z.object({
 });
 
 export const registerStepOneSchema = z.object({
-   /* firstName: z.string().min(2, "نام باید حداقل 2 کاراکتر باشد"),
-    lastName: z.string().min(2, "نام خانوادگی باید حداقل 2 کاراکتر باشد"),*/
-    phone: z
+    contact: z
         .string()
-        .min(11, "شماره موبایل باید 11 رقم باشد")
-        .max(11, "شماره موبایل باید 11 رقم باشد"),
-    email: z.string().email("ایمیل معتبر وارد کنید").optional().or(z.literal("")),
+        .length(11, "شماره موبایل باید 11 رقم باشد")
+        .regex(/^09\d{9}$/, "شماره موبایل باید با 09 شروع شود و 11 رقم باشد"),
+    natId: z
+        .string()
+        .length(10, "کد ملی باید 10 رقم باشد")
+        .regex(/^\d+$/, "کد ملی فقط می‌تواند شامل اعداد باشد"),
+
+    birthDate: z
+        .string()
+        .min(1, "تاریخ تولد وارد نشده")
+        .length(10, "تاریخ تولد باید 10 کاراکتر باشد"), // مثلا 1402/01/01
+
+
+    hostId: z.string().min(1, "پلتفرم مرجع را انتخاب کنید"),
 });
 
 export const registerStepTwoSchema = z.object({
@@ -27,6 +36,7 @@ export const registerStepTwoSchema = z.object({
 
 export const registerStepThreeSchema = z
     .object({
+
         password: z.string().min(6, "رمز عبور باید حداقل 6 کاراکتر باشد"),
         confirmPassword: z
             .string()

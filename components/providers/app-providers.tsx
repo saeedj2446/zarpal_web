@@ -7,7 +7,8 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import { store } from "../../lib/store/store"
 import { Toaster } from "../radix/toaster"
 import { ThemeProvider } from "../theme-provider"
-import { DirectionProvider } from "@radix-ui/react-direction";
+import { DirectionProvider } from "@radix-ui/react-direction"
+import TokenProvider from "@/components/providers/tokenProvider"; // مسیر به AuthWrapper
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,17 +30,18 @@ interface AppProvidersProps {
 
 export function AppProviders({ children }: AppProvidersProps) {
   return (
-    <Provider store={store}>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <DirectionProvider dir="rtl">
-            {children}
-            <Toaster />
-          </DirectionProvider>
-
-        </ThemeProvider>
-        <ReactQueryDevtools initialIsOpen={false} />
-      </QueryClientProvider>
-    </Provider>
+      <Provider store={store}>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+            <DirectionProvider dir="rtl">
+              <TokenProvider h={20}>
+                {children}
+              </TokenProvider>
+              <Toaster />
+            </DirectionProvider>
+          </ThemeProvider>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </QueryClientProvider>
+      </Provider>
   )
 }

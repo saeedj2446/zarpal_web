@@ -1,0 +1,261 @@
+"use client"
+
+import { useMutation } from "@tanstack/react-query"
+import { useDispatch, useSelector } from "react-redux"
+import type { RootState } from "@/lib/store/store"
+import {
+  setAccessToken,
+  setSessionId,
+  setOtpSeconds,
+  startOtpTimer,
+  clearAuth,
+  setUser,
+} from "@/lib/store/slices/authSlice"
+import { toast } from "./use-toast"
+import { authApi } from "@/lib/api/auth"
+import jMoment from "moment-jalaali"
+import {
+  generateMyMac,
+  generateRefreshToken, hexToBytes,
+  increaseStringSize,
+  normalizePhoneNumber,
+} from "@/lib/utils/utils"
+import { setAuthSessionId, setAuthToken } from "@/lib/api/apiRequest"
+import type {RegisterUserReq, DtoIn_Otp, DtoIn_Password, ChangePasswordReq} from "../types"
+import {generateTerminalPassword} from "@/lib/utils/sequrity/HashPass";
+
+
+export const useAuth = () => {
+  const dispatch = useDispatch()
+
+  // ⬅️ گرفتن کل استیت از Redux
+  const { accessToken, sessionId, otpSeconds, user } = useSelector(
+      (state: RootState) => state.auth
+  )
+
+  // ⬅️ setter ها (wrap روی dispatch)
+  const setAccessTokenValue = (token: string) =>
+      dispatch(setAccessToken({ accessToken: token }))
+
+  const setSessionIdValue = (id: string | null) =>
+      dispatch(setSessionId({ sessionId: id }))
+
+  const setOtpSecondsValue = (seconds: number) =>
+      dispatch(setOtpSeconds({ otpSeconds: seconds }))
+
+  const startOtp = (seconds: number) => dispatch(startOtpTimer(seconds))
+
+  const setUserValue = (u: typeof user) => dispatch(setUser(u))
+
+  const clearAuthState = () => dispatch(clearAuth())
+
+  // ✅ گرفتن توکن
+  const getToken = useMutation({
+    mutationFn: async (data: RegisterUserReq) => {
+      const refreshToken = await generateRefreshToken()
+      return authApi.getToken(refreshToken)
+    },
+    onSuccess: (data) => {
+      setAuthToken(data)
+      setAccessTokenValue(data) // ⬅️ ست در استیت
+    },
+    onError: (error: any) => {
+      toast(error.getToast())
+    },
+  })
+
+  // ✅ Step 1: Register user request
+  const registerUserReqMutation = useMutation({
+    mutationFn: (data: RegisterUserReq) => {
+      const clientTime = jMoment().format("YYYY-MM-DD HH:mm:ss")
+      const natId = data.natId
+      const hostId = data.hostId
+      const str =
+          clientTime +
+          increaseStringSize(natId, 10, " ", false) +
+          increaseStringSize(hostId, 3, " ", false)
+      const mac = generateMyMac(str)
+      const input = {
+        natId: Number(natId),
+        contact: normalizePhoneNumber(data.contact),
+        birthDate: data.birthDate,
+        hostId: Number(hostId),
+        recommender: data.recommender,
+        clientTime,
+        mac,
+      }
+      return authApi.registerUserReq(input)
+    },
+    onSuccess: (data) => {
+      setAuthSessionId(data.sessionId)
+      startOtp(120)
+      toast({
+        title: "موفق",
+        description:
+            "لطفا کد پیامک شده را وارد کنید.",
+      })
+    },
+    onError: (error: any) => {
+      toast(error.getToast());
+    },
+  })
+
+  // ✅ Resend Register Token
+  const resendRegisterTokenMutation = useMutation({
+    mutationFn: () => authApi.resendRegisterToken(),
+    onSuccess: (data) => {
+      setAuthSessionId(data.sessionId)
+      setAuthToken(data.sessionId);
+      startOtp(120) // شروع تایمر OTP
+      toast({
+        title: "موفق",
+        description: "کد جدید به شماره شماره شما ارسال شد. لطفا کد را وارد کنید.",
+      })
+    },
+    onError: (error: any) => {
+      toast(error.getToast())
+    },
+  })
+
+
+  // ✅ Step 2: Verify OTP
+  const registerUserAutMutation = useMutation({
+    mutationFn: (data: DtoIn_Otp) => authApi.registerUserAut(data),
+    onSuccess: () => {
+      toast({
+        title: "موفق",
+        description: "با موفقیت تایید شدید. اکنون یک رمز عبور برای خود انتخاب کنید.",
+      })
+    },
+    onError: (error: any) => {
+      toast(error.getToast())
+
+    },
+  })
+
+  // ✅ Step 3: Set password
+  const registerUserPasMutation = useMutation({
+    mutationFn: (data: DtoIn_Password) => {
+      const terminalKey=hexToBytes(process.env.NEXT_PUBLIC_TERMINAL_KEY);
+      const encPassword = generateTerminalPassword(normalizePhoneNumber(data.username), data.password, new Date(),terminalKey);
+      const input = {
+        encPassword,
+        clientTime: jMoment().format("YYYY-MM-DD HH:mm:ss"),
+      }
+      return authApi.registerUserPas(input)
+    },
+    onSuccess: () => {
+      toast({
+        title: "",
+        description: "شما با موفقیت ثبت نام شدید. لطفا لاگین کنید.",
+      })
+    },
+    onError: (error: any) => {
+      toast(error.getToast())
+    },
+  })
+
+  // ✅ Login
+  const loginMutation = useMutation({
+    mutationFn: (data: { username: string; password: string }) =>
+        authApi.login(data),
+    onSuccess: (data) => {
+      // ذخیره sessionId
+      if (data.sessionId) {
+        setSessionIdValue(data.sessionId);
+        setAuthSessionId(data.sessionId);
+      }
+      if (data.passChange) {
+        /*toast({
+          title: "تغییر رمز لازم است",
+          description:
+              "لطفاً رمز عبور خود را تغییر دهید تا دسترسی کامل فعال شود.",
+        });*/
+      }
+      if (data.userProfile) {
+        setUserValue(data.userProfile);
+      }
+    },
+    onError: (error: any) => {
+      toast(error.getToast());
+    },
+  });
+
+// ✅ Forget Password
+  const forgetPasswordMutation = useMutation({
+    mutationFn: (data: { phone: string; nationalId: string; birthDate: string }) =>
+        authApi.forgetPassword(data),
+    onSuccess: () => {
+      toast({
+        title: "موفق",
+        description: "درخواست بازیابی رمز عبور با موفقیت ثبت شد. لطفاً پیامک را بررسی کنید.",
+      });
+    },
+    onError: (error: any) => {
+      toast(error.getToast());
+    },
+  });
+
+  const changePasswordMutation = useMutation({
+    mutationFn: (data: ChangePasswordReq) => authApi.changePassword(data),
+    onSuccess: () => {
+      toast({
+        title: "موفق",
+        description: "رمز عبور شما با موفقیت تغییر یافت.",
+      });
+    },
+    onError: (error: any) => {
+      toast(error.getToast());
+    },
+  });
+
+  return {
+    // state
+    accessToken,
+    sessionId,
+    otpSeconds,
+    user,
+
+    // setters
+    setAccessToken: setAccessTokenValue,
+    setSessionId: setSessionIdValue,
+    setOtpSeconds: setOtpSecondsValue,
+    startOtp,
+    setUser: setUserValue,
+    clearAuth: clearAuthState,
+
+    // mutations
+
+    // loading states
+    isPending:
+        registerUserReqMutation.isPending ||
+        registerUserAutMutation.isPending ||
+        registerUserPasMutation.isPending ||
+        getToken.isPending,
+
+    registerUserReq: registerUserReqMutation.mutateAsync,
+    isRegistering: registerUserReqMutation.isPending,
+
+    registerUserAut: registerUserAutMutation.mutateAsync,
+    isVerifying: registerUserAutMutation.isPending,
+
+    registerUserPas: registerUserPasMutation.mutateAsync,
+    isSettingPassword: registerUserPasMutation.isPending,
+
+    refreshToken: getToken.mutateAsync,
+    isRefreshingToken: getToken.mutateAsync,
+
+    resendRegisterToken: resendRegisterTokenMutation.mutateAsync,
+    isResendingToken: resendRegisterTokenMutation.isPending,
+
+    login: loginMutation.mutateAsync,
+    isLoggingIn:loginMutation.isPending,
+
+    forgetPassword: forgetPasswordMutation.mutateAsync,
+    isForgettingPassword: forgetPasswordMutation.isPending,
+
+    changePassword: changePasswordMutation.mutateAsync,
+    isChangingPassword: changePasswordMutation.isPending,
+
+  }
+}
