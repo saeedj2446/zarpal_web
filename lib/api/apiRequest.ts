@@ -125,6 +125,7 @@ export const apiRequest = async <T = any>(
         if (authToken) {
             options.headers.Authorization = `Bearer ${authToken}`;
         }
+
         // اضافه کردن sessionId به بادی یا پارامترها
         if (needSessionId && authSessionId) {
             if (options.data) {

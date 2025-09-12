@@ -7,14 +7,14 @@ interface AuthState {
     accessToken: string | null;
     sessionId: string | null;
     otpSeconds: number;
-    user?: Dto_UserProfile;
+    profile?: Dto_UserProfile;
 }
 
 const initialState: AuthState = {
     accessToken: null,
     sessionId: null,
     otpSeconds: 0,
-    user: undefined,
+    profile: undefined,
 };
 
 export const authSlice = createSlice({
@@ -35,15 +35,16 @@ export const authSlice = createSlice({
                 state.otpSeconds -= 1;
             }
         },
-        clearAuth: (state) => {
+        logout: (state) => {
             state.accessToken = null;
             state.sessionId = null;
-            state.user = undefined;
+            state.profile = undefined;
             state.otpSeconds = 0;
         },
-        setUser: (state, action: PayloadAction<AuthState["user"]>) => {
-            state.user = action.payload;
+        setProfile: (state, action: PayloadAction<AuthState["profile"]>) => {
+            state.profile = action.payload;
         },
+
     },
 });
 
@@ -52,8 +53,8 @@ export const {
     setSessionId,
     setOtpSeconds,
     tickOtpSeconds,
-    clearAuth,
-    setUser,
+    logout,
+    setProfile,
 } = authSlice.actions;
 
 export default authSlice.reducer;

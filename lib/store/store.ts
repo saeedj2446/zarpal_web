@@ -7,7 +7,7 @@ import { todoSlice } from "./slices/todoSlice";
 const persistConfig = {
     key: "auth",
     storage,
-    whitelist: ["accessToken", "sessionId", "user"], // فقط این فیلدها persist می‌شوند
+    whitelist: ["accessToken", "sessionId", "profile"], // فقط این فیلدها persist می‌شوند
 };
 
 const persistedAuthReducer = persistReducer(persistConfig, authReducer);

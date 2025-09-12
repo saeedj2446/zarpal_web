@@ -48,7 +48,7 @@ export const authApi = {
     })
   },
   login: async (data: DtoIn_loginStatic): Promise<DtoOutLoginStatic> => {
-    return apiRequest("/login", {
+    return apiRequest("/loginStatic", {
       method: "POST",
       data,
       needSessionId: false,

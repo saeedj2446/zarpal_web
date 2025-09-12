@@ -8,8 +8,8 @@ import {
   setSessionId,
   setOtpSeconds,
   startOtpTimer,
-  clearAuth,
-  setUser,
+  logout,
+  setProfile,
 } from "@/lib/store/slices/authSlice"
 import { toast } from "./use-toast"
 import { authApi } from "@/lib/api/auth"
@@ -23,13 +23,14 @@ import {
 import { setAuthSessionId, setAuthToken } from "@/lib/api/apiRequest"
 import type {RegisterUserReq, DtoIn_Otp, DtoIn_Password, ChangePasswordReq} from "../types"
 import {generateTerminalPassword} from "@/lib/utils/sequrity/HashPass";
-
+import {router} from "next/client";
 
 export const useAuth = () => {
   const dispatch = useDispatch()
 
+
   // ⬅️ گرفتن کل استیت از Redux
-  const { accessToken, sessionId, otpSeconds, user } = useSelector(
+  const { accessToken, sessionId, otpSeconds, profile } = useSelector(
       (state: RootState) => state.auth
   )
 
@@ -45,9 +46,9 @@ export const useAuth = () => {
 
   const startOtp = (seconds: number) => dispatch(startOtpTimer(seconds))
 
-  const setUserValue = (u: typeof user) => dispatch(setUser(u))
+  const setProfileValue = (u: typeof profile) => dispatch(setProfile(u))
 
-  const clearAuthState = () => dispatch(clearAuth())
+  const logoutState = () => dispatch(logout())
 
   // ✅ گرفتن توکن
   const getToken = useMutation({
@@ -157,10 +158,22 @@ export const useAuth = () => {
 
   // ✅ Login
   const loginMutation = useMutation({
-    mutationFn: (data: { username: string; password: string }) =>
-        authApi.login(data),
+    mutationFn: (data: { username: string; password: string }) =>{
+      const terminalKey=hexToBytes(process.env.NEXT_PUBLIC_TERMINAL_KEY);
+      const clientTime = jMoment().format('YYYY-MM-DD HH:mm:ss');
+      const encPassword = generateTerminalPassword(data.username, data.password, new Date(), terminalKey);
+      const macStr = clientTime + increaseStringSize(data.username, 128, ' ', false);
+      const mac = generateMyMac(macStr);
+
+      const input = {
+        userName: data.username,
+        encPassword,
+        clientTime,
+        mac
+      }
+     return  authApi.login(input)
+    } ,
     onSuccess: (data) => {
-      // ذخیره sessionId
       if (data.sessionId) {
         setSessionIdValue(data.sessionId);
         setAuthSessionId(data.sessionId);
@@ -173,10 +186,15 @@ export const useAuth = () => {
         });*/
       }
       if (data.userProfile) {
-        setUserValue(data.userProfile);
+        setProfileValue(data.userProfile);
       }
+      toast({
+        title: "ورود موفق",
+        description: "به زرپال خوش آمدید.",
+      });
     },
     onError: (error: any) => {
+      console.log(error);
       toast(error.getToast());
     },
   });
@@ -214,16 +232,15 @@ export const useAuth = () => {
     accessToken,
     sessionId,
     otpSeconds,
-    user,
+    profile,
 
     // setters
     setAccessToken: setAccessTokenValue,
     setSessionId: setSessionIdValue,
     setOtpSeconds: setOtpSecondsValue,
     startOtp,
-    setUser: setUserValue,
-    clearAuth: clearAuthState,
-
+    setProfile: setProfileValue,
+    logout: logoutState,
     // mutations
 
     // loading states

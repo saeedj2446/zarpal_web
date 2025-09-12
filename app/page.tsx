@@ -1,5 +1,7 @@
-import HomePageComponent from "./home/components/home-page";
+"use client";
+import PanelForm from "@/app/panel/components/panel";
 
 export default function HomePage() {
-  return <HomePageComponent />;
+
+  return <PanelForm />;
 }

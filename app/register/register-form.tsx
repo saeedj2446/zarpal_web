@@ -51,7 +51,7 @@ import {generateMyMac, generateRefreshToken, increaseStringSize, normalizePhoneN
 import jMoment from "moment-jalaali";
 import {generateMac} from "@/lib/utils/jwt/HashPass";
 import type {DtoIn_Password, RegisterUserReq} from "@/lib/types";
-import {CountdownTimer, OtpTimer} from "@/components/common";
+import {Timer} from "@/components/common";
 
 type RegisterStep = 1 | 2 | 3;
 
@@ -358,7 +358,7 @@ export function RegisterForm() {
                           >
                             {isResendingToken ? "در حال ارسال..." : "ارسال مجدد کد"}
                           </button>
-                      ) : (<OtpTimer currentSeconds={otpSeconds} size={50}/>)}
+                      ) : (<Timer currentSeconds={otpSeconds} size={55}/>)}
                     </div>
                     <div className="flex flex-col items-center gap-3">
                       <div className="w-full max-w-[400px] flex flex-col gap-3">

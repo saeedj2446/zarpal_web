@@ -13,7 +13,7 @@ import XSafeAreaView from "./XSafeAreaView";
 import XKeyboardAvoidingView from "./XKeyboardAvoidingView";
 import XRefreshControl from "./XRefreshControl";
 import XSlider from "./XSlider";
-import OtpTimer from "./OtpTimer";
+import Timer from "./Timer";
 
 export {
     XView,
@@ -31,5 +31,5 @@ export {
     XKeyboardAvoidingView,
     XRefreshControl,
     XSlider,
-    OtpTimer,
+    Timer,
 };

@@ -23,6 +23,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useAuth } from "@/lib/hooks/useAuth";
+import {normalizePhoneNumber} from "@/lib/utils/utils";
+
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -39,18 +41,8 @@ export function LoginForm() {
   });
 
   const onSubmit = async (data: LoginFormData) => {
-    try {
-      const loginData = {
-        username: data.phone,
-        password: data.password,
-      };
-
-      await login(loginData);
-      router.push("/"); // ریدایرکت بعد از ورود موفق
-    } catch (error: any) {
-      console.error("Login error:", error);
-      alert(error?.message || "خطای ورود رخ داد");
-    }
+    await login({username:normalizePhoneNumber(data.phone) ,password:data.password});
+    router.replace("/");
   };
 
   return (
