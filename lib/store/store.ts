@@ -3,19 +3,28 @@ import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, 
 import storage from "redux-persist/lib/storage"; // localStorage
 import authReducer from "./slices/authSlice";
 import { todoSlice } from "./slices/todoSlice";
+import walletReducer from "./slices/walletSlice";
 
-const persistConfig = {
+const aothPersistConfig = {
     key: "auth",
     storage,
     whitelist: ["accessToken", "sessionId", "profile"], // فقط این فیلدها persist می‌شوند
 };
+const walletPersistConfig = {
+    key: "wallet",
+    storage,
+    whitelist: ["currentWallet"],
+};
 
-const persistedAuthReducer = persistReducer(persistConfig, authReducer);
+const persistedAuthReducer = persistReducer(aothPersistConfig, authReducer);
+const persistedWalletReducer = persistReducer(walletPersistConfig, walletReducer);
 
 export const store = configureStore({
     reducer: {
         todos: todoSlice.reducer,
         auth: persistedAuthReducer,
+        wallet: persistedWalletReducer,
+
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

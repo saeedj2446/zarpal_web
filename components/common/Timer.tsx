@@ -1,63 +1,70 @@
-
 interface OtpTimerProps {
     totalTime: number;       // کل زمان OTP بر حسب ثانیه
-    currentSeconds: number;  // مقدار فعلی ثانیه
+    currentTime: number;     // مقدار فعلی ثانیه
     size?: number;
-    emptyColor?: string;// قطر دایره به پیکسل (اختیاری)
-    fillColor?: string;
-    textColor?: string;
+    emptyColor?: string;     // رنگ دایره خالی
+    fillColor?: string;      // رنگ دور دایره (بیرونی)
+    textColor?: string;      // رنگ متن وسط (اختیاری، اگر نخوای خودش کانتینر میگیره)
 }
 
 export default function Timer({
-                                  totalTime=120,
-                                  currentSeconds,
+                                  totalTime = 120,
+                                  currentTime,
                                   size = 100,
-                                  emptyColor="#e896b7",
-                                  fillColor="white",
-                                  textColor = "#555",
+                                  emptyColor = "rgba(245, 245, 245, 0.3)",
+                                  fillColor = "#F59E0B",
+                                  textColor,
                               }: OtpTimerProps) {
-    if (currentSeconds <= 0) return null;
+    if (currentTime <= 0) return null;
 
     const radius = size / 2;
-    const stroke = size * 0.1; // ضخامت تقریبی نسبت به سایز
+    const stroke = size * 0.1; // ضخامت دایره
     const normalizedRadius = radius - stroke;
     const circumference = normalizedRadius * 2 * Math.PI;
     const strokeDashoffset =
-        circumference - (currentSeconds / totalTime) * circumference;
+        circumference - (currentTime / totalTime) * circumference;
 
     return (
-        <div className="flex flex-col items-center justify-center">
+        <div
+            className="flex flex-col items-center justify-center"
+            style={{ color: textColor || "currentColor" }} // متن وسط از کانتینر می‌گیره اگر textColor پاس داده نشده
+        >
             <svg height={size} width={size}>
+                {/* دایره خالی */}
                 <circle
-                    stroke={emptyColor}
-                    fill="transparent"
+                    stroke={emptyColor}       // رنگ دایره خالی
+                    fill="currentColor"       // رنگ وسط از والد گرفته می‌شود
+                    fillOpacity={0.1}         // کمرنگ بودن
                     strokeWidth={stroke}
                     r={normalizedRadius}
                     cx={radius}
                     cy={radius}
                 />
+
+                {/* دایره پر شده */}
                 <circle
                     stroke={fillColor}
                     fill="transparent"
                     strokeWidth={stroke}
                     strokeDasharray={`${circumference} ${circumference}`}
-                    style={{ strokeDashoffset }}
+                    style={{strokeDashoffset}}
                     strokeLinecap="round"
                     r={normalizedRadius}
                     cx={radius}
                     cy={radius}
                     transform={`rotate(-90 ${radius} ${radius})`}
                 />
+                {/* متن وسط */}
                 <text
                     x="50%"
                     y="50%"
                     textAnchor="middle"
                     dy="0.3em"
-                    fontSize={size * 0.25} // اندازه متن نسبت به سایز دایره
-                    fill={textColor}
+                    fontSize={size * 0.32}
+                    fill="currentColor" // همون رنگ کانتینر یا textColor
                     fontWeight="bold"
                 >
-                    {currentSeconds}
+                    {currentTime}
                 </text>
             </svg>
         </div>

@@ -17,21 +17,27 @@ import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { persistor } from "@/lib/store/store";
 import {useAuth} from "@/lib/hooks/useAuth";
-import WalletSlider from "@/app/panel/components/walletSlider";
+import {useWallet} from "@/lib/hooks/useWallet";
+import UserWalletList from "@/app/panel/components/user-wallet-list";
+import {diffDate} from "@/lib/utils/utils";
+import {setCurrentWallet} from "@/lib/store/slices/walletSlice";
+import jMoment from "moment-jalaali";
+import GoldRateBoard from "@/app/panel/components/gold-rate-board";
+
 
 
 
 export default function PanelForm() {
   const router = useRouter();
-  const dispatch = useDispatch();
   const { sessionId,logout ,profile={}} = useAuth();
+
   if (!sessionId) {
     router.replace("/login");
     return null;
   }
 
   const { fisrtName, lastName, fathersName, gender, nationality, natId, contact, birthDate,purseList } = profile;
-
+  const { currentWallet} = useWallet();
   const handleLogout = async () => {
     logout();
     await persistor.purge(); // پاک کردن persisted state
@@ -116,35 +122,29 @@ export default function PanelForm() {
 
           {/* Timer */}
           <div className="justify-center">
-            <Timer
-                totalTime={360}
-                textColor={"white"}
-                currentSeconds={250}
-                size={55}
-            />
+            {currentWallet &&(
+                <Timer
+                    totalTime={diffDate(currentWallet.active.usageStart, currentWallet.active.usageEnd)}
+                    fillColor={"white"}
+                    textColor={"white"}
+                    currentTime={diffDate(jMoment().format("YYYY-MM-DD HH:mm:ss"), currentWallet.active.usageEnd)}
+                    size={50}
+                />
+                )
+            }
+
           </div>
         </div>
 
         {/* Main Content */}
         <div className="max-w-[800px] mx-auto p-4 ">
 
-
-          <Card className="max-w-sm mb-4 overflow-hidden mx-auto bg-white  rounded-xl shadow-md cursor-pointer transition-transform">
-            <div className="bg-black text-white p-3 flex items-center justify-between">
-              <div className="bg-yellow-500 rounded-full w-8 h-8 flex items-center justify-center">
-                <span className="text-black font-bold text-sm">۴۵</span>
-              </div>
-              <span className="text-sm">نرخ هر گرم ۸۷۵۳</span>
-            </div>
-            <WalletSlider
+            <UserWalletList
                 wallets={purseList}
                 onSelectWallet={(wallet) => {
-                  debugger;
-                  console.log("Selected wallet:", wallet);
+
                 }}
             />
-          </Card>
-
 
           {/* Menu Buttons */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6">

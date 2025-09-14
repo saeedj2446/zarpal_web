@@ -358,7 +358,7 @@ export function RegisterForm() {
                           >
                             {isResendingToken ? "در حال ارسال..." : "ارسال مجدد کد"}
                           </button>
-                      ) : (<Timer currentSeconds={otpSeconds} size={55}/>)}
+                      ) : (<Timer currentTime={otpSeconds} size={55}/>)}
                     </div>
                     <div className="flex flex-col items-center gap-3">
                       <div className="w-full max-w-[400px] flex flex-col gap-3">

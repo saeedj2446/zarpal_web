@@ -15,7 +15,7 @@
 }
 
 body {
-  font-family: "iransans", sans-serif !important;
+  font-family: "iransans-number", sans-serif !important;
 }
 
 @tailwind base;

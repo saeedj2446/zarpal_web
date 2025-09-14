@@ -7,7 +7,7 @@ import { Phone, Camera, Image } from "lucide-react";
 
 export default function RequestPaymentPage() {
   return (
-    <div className="min-h-screen bg-gray-100 font-['iransans']">
+    <div className="min-h-screen bg-gray-100 font-['iransans-number']">
       {/* Header */}
       <div className="bg-[#a85a7a] text-white p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">

@@ -2,7 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query"
 import { useDispatch, useSelector } from "react-redux"
-import type { RootState } from "@/lib/store/store"
+import {RootState, store} from "@/lib/store/store"
 import {
   setAccessToken,
   setSessionId,
@@ -24,6 +24,7 @@ import { setAuthSessionId, setAuthToken } from "@/lib/api/apiRequest"
 import type {RegisterUserReq, DtoIn_Otp, DtoIn_Password, ChangePasswordReq} from "../types"
 import {generateTerminalPassword} from "@/lib/utils/sequrity/HashPass";
 import {router} from "next/client";
+import {clearCurrentWallet, setCurrentWallet} from "@/lib/store/slices/walletSlice";
 
 export const useAuth = () => {
   const dispatch = useDispatch()
@@ -33,6 +34,8 @@ export const useAuth = () => {
   const { accessToken, sessionId, otpSeconds, profile } = useSelector(
       (state: RootState) => state.auth
   )
+
+
 
   // ⬅️ setter ها (wrap روی dispatch)
   const setAccessTokenValue = (token: string) =>
@@ -158,8 +161,13 @@ export const useAuth = () => {
 
   // ✅ Login
   const loginMutation = useMutation({
-    mutationFn: (data: { username: string; password: string }) =>{
-      const terminalKey=hexToBytes(process.env.NEXT_PUBLIC_TERMINAL_KEY);
+    mutationFn: (data: { username: string; password: string }) => {
+      // ---------- قبل از لاگین، پاک کردن persisted wallet و state ----------
+      dispatch(clearCurrentWallet()); // پاک کردن currentWallet از Redux
+      localStorage.removeItem("currentWallet"); // پاک کردن persisted wallet از localStorage
+
+      // ---------- آماده سازی ورودی لاگین ----------
+      const terminalKey = hexToBytes(process.env.NEXT_PUBLIC_TERMINAL_KEY);
       const clientTime = jMoment().format('YYYY-MM-DD HH:mm:ss');
       const encPassword = generateTerminalPassword(data.username, data.password, new Date(), terminalKey);
       const macStr = clientTime + increaseStringSize(data.username, 128, ' ', false);
@@ -171,13 +179,15 @@ export const useAuth = () => {
         clientTime,
         mac
       }
-     return  authApi.login(input)
-    } ,
+
+      return authApi.login(input)
+    },
     onSuccess: (data) => {
       if (data.sessionId) {
         setSessionIdValue(data.sessionId);
         setAuthSessionId(data.sessionId);
       }
+
       if (data.passChange) {
         /*toast({
           title: "تغییر رمز لازم است",
@@ -185,9 +195,29 @@ export const useAuth = () => {
               "لطفاً رمز عبور خود را تغییر دهید تا دسترسی کامل فعال شود.",
         });*/
       }
+
       if (data.userProfile) {
         setProfileValue(data.userProfile);
       }
+
+      // ---------- مدیریت کیف پول ----------
+      let walletToSet = data.userProfile.purseList[0]; // پیش‌فرض اولین کیف
+      const persistedWallet = store.getState().wallet.currentWallet; // persisted redux state
+
+
+      if (persistedWallet) {
+        const parsedWallet = JSON.parse(persistedWallet);
+        // اگر کیف persisted هنوز در لیست کیف‌ها هست، اون رو ست کن
+        const found = data.userProfile.purseList.find(w => w.id === parsedWallet.id);
+        if (found) {
+          walletToSet = found;
+        }
+      }
+
+      dispatch(setCurrentWallet({ currentWallet: walletToSet }));
+      // ذخیره کیف انتخاب شده در localStorage برای persist
+      localStorage.setItem("currentWallet", JSON.stringify(walletToSet));
+
       toast({
         title: "ورود موفق",
         description: "به زرپال خوش آمدید.",
@@ -198,6 +228,7 @@ export const useAuth = () => {
       toast(error.getToast());
     },
   });
+
 
 // ✅ Forget Password
   const forgetPasswordMutation = useMutation({

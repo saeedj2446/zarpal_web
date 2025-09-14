@@ -1,6 +1,44 @@
 // Core TypeScript interfaces for the application
 
-// ---------------------
+// types/currency.ts
+
+// 👇 تایپ اصلی
+export type Currency =
+    |"gld4Tst"
+    | "IRR" // ریال ایران
+    | "USD" // دلار آمریکا
+    | "EUR" // یورو
+    | "GBP" // پوند انگلیس
+    | "TRY" // لیر ترکیه
+    | "AED" // درهم امارات
+    | "CNY" // یوان چین
+    | "JPY" // ین ژاپن
+    | "RUB" // روبل روسیه
+    | "XAU" // طلا (اونس یا معادل طلا)
+    | "BTC" // بیت کوین
+    | "ETH"; // اتریوم
+
+// 👇 مپ تایتل‌ها
+export const CurrencyTitle: Record<Currency, string> = {
+  "gld4Tst":"طلا 24",
+  IRR: "ریال ایران",
+  USD: "دلار آمریکا",
+  EUR: "یورو",
+  GBP: "پوند انگلیس",
+  TRY: "لیر ترکیه",
+  AED: "درهم امارات",
+  CNY: "یوان چین",
+  JPY: "ین ژاپن",
+  RUB: "روبل روسیه",
+  XAU: "طلا",
+  BTC: "بیت کوین",
+  ETH: "اتریوم",
+};
+
+// 👇 فانکشن کمکی
+export const getCurrencyTitle = (currency: string): string =>
+    CurrencyTitle[currency.toUpperCase() as Currency] ?? currency.toUpperCase();
+
 // FeeFunction
 export type FeeFunction = "CI" | "CIo" | "CO" | "T";
 export const FeeFunctionTitle: Record<FeeFunction, string> = {
@@ -85,7 +123,13 @@ export const UserTypeTitle: Record<UserType, string> = {
   S: "فروشنده",
 };
 
-
+// دلیل درخواست (نمایش/پذیرش/رد)
+export type LandingPageReason = "S" | "A" | "D";
+export const LandingPageReasonTitle: Record<LandingPageReason, string> = {
+  S: "نمایش دستور پرداخت",
+  A: "پذیرش دستور پرداخت",
+  D: "رد دستور پرداخت",
+}
 export interface Dto_Response {
   responseCode: number
   responseData: any
@@ -233,6 +277,30 @@ export interface ChangePasswordReq {
 }
 
 
+// ----------------- Currency Rate -----------------
+export interface DtoIn_currencyRate {
+  clientTime: string; // Timestamp (M)
+  mac: string;        // Byte(8) (M)
+}
+
+export interface DtoOut_currencyRate {
+  expireOn?: string; // Timestamp (O)
+  weBuy: number;     // Money (M)
+  weSell: number;    // Money (M)
+  response?: Dto_Response; // Dto_Response[O] (M)
+}
+
+export interface DtoOut_landingPage {
+  purse: Dto_Purse[];       // کیف دریافت وجه
+  design?: number;          // شناسه طرح (اختیاری)
+  desc?: string;            // شرح درخواست
+  amount: number;           // مبلغ درخواست به ریال
+  expiredOn?: string;       // زمان انقضا (Timestamp)
+  payerContact: string;     // موبایل ارسال‌کننده
+  payerTitle?: string;      // عنوان ارسال‌کننده
+  response: Dto_Response;   // پاسخ
+}
+
 
 
 
@@ -282,5 +350,19 @@ export interface TodoState {
   filter: "all" | "completed" | "incomplete"
   searchQuery: string
   draggedTodo: Todo | null
+}
+
+
+export interface DtoIn_landingPage {
+  shortId: string;     // Byte(8) → کد لینک کوتاه
+  reason: LandingPageReason; // Character (S/A/D)
+  clientTime: string;  // Timestamp (فرمت: YYYY-MM-DD HH:mm:ss)
+  mac: string;         // Byte(8) → کد امنیتی پیام
+}
+
+// DtoOut_PaymentLink برای Accept
+export interface DtoOut_PaymentLink {
+  paymentLink: string;       // لینک درگاه پرداخت
+  response: Dto_Response;    // پاسخ سرور
 }
 

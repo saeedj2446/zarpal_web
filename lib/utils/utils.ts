@@ -69,4 +69,14 @@ export const hexToBytes=(hex: string): Uint8Array=> {
   return bytes;
 }
 
+export function diffDate(start: string, end: string): number {
+  if (!start || !end) return "";
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  // اختلاف بر حسب میلی‌ثانیه
+  const diffMs = endDate.getTime() - startDate.getTime();
+
+  // اختلاف به روز
+  return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+}
 

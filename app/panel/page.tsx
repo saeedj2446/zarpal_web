@@ -49,7 +49,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100 font-['iransans']">
+    <div className="min-h-screen bg-gray-100 font-['iransans-number']">
       {/* Header */}
       <div className="bg-[#a85a7a] text-white p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
