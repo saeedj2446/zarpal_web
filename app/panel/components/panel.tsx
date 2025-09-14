@@ -139,12 +139,7 @@ export default function PanelForm() {
         {/* Main Content */}
         <div className="max-w-[800px] mx-auto p-4 ">
 
-            <UserWalletList
-                wallets={purseList}
-                onSelectWallet={(wallet) => {
-
-                }}
-            />
+          <UserWalletList/>
 
           {/* Menu Buttons */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6">

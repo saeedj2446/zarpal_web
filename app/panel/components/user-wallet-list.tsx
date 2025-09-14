@@ -10,6 +10,7 @@ import "swiper/css/pagination";
 import { Navigation, Pagination } from "swiper/modules";
 import { useWallet } from "@/lib/hooks/useWallet";
 import GoldRateBoard from "@/app/panel/components/gold-rate-board";
+import {useAuth} from "@/lib/hooks/useAuth";
 
 export interface Wallet {
     id: string;
@@ -24,12 +25,13 @@ export interface Wallet {
 }
 
 interface WalletSliderProps {
-    wallets: Wallet[];
     onSelectWallet?: (wallet: Wallet) => void;
 }
 
-export default function UserWalletList({ wallets, onSelectWallet }: WalletSliderProps) {
+export default function UserWalletList({  onSelectWallet }: WalletSliderProps) {
     const { setCurrentWalletValue, currentWallet } = useWallet();
+    const {profile={}} = useAuth();
+    const { purseList } = profile;
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const swiperRef = useRef<any>(null);
 
@@ -38,12 +40,12 @@ export default function UserWalletList({ wallets, onSelectWallet }: WalletSlider
         if (currentWallet) {
             setSelectedId(currentWallet.id);
             // پیدا کردن ایندکس کیف در لیست
-            const index = wallets.findIndex(w => w.id === currentWallet.id);
+            const index = purseList.findIndex(w => w.id === currentWallet.id);
             if (index >= 0 && swiperRef.current) {
                 swiperRef.current.slideTo(index, 0); // بلافاصله اسلاید می‌کنه
             }
         }
-    }, [currentWallet, wallets]);
+    }, [currentWallet, purseList]);
 
     const handleSelect = (wallet: Wallet) => {
         setSelectedId(wallet.id);
@@ -61,12 +63,12 @@ export default function UserWalletList({ wallets, onSelectWallet }: WalletSlider
                 className="w-full max-w-md"
                 onSlideChange={(swiper) => {
                     const activeIndex = swiper.activeIndex;
-                    const activeSlide = wallets[activeIndex];
+                    const activeSlide = purseList[activeIndex];
                     handleSelect(activeSlide);
                 }}
                 onSwiper={(swiper) => (swiperRef.current = swiper)}
             >
-                {wallets.map((wallet) => (
+                {purseList.map((wallet) => (
                     <SwiperSlide key={wallet.id}>
                         <>
                             <GoldRateBoard />

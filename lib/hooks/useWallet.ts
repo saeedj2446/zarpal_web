@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "@/lib/store/store";
 import { setCurrentWallet } from "@/lib/store/slices/walletSlice";
 import { walletApi } from "@/lib/api/wallet";
-import { DtoIn_landingPage, DtoOut_landingPage } from "@/lib/types";
+import {DtoIn_cashInByOther, DtoIn_landingPage, DtoOut_landingPage} from "@/lib/types";
 import jMoment from "moment-jalaali";
 import { generateMyMac, increaseStringSize } from "@/lib/utils/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -80,6 +80,16 @@ export const useWallet = () => {
     },
   });
 
+  const cashInByOtherMutation = useMutation({
+    mutationFn: (data: DtoIn_cashInByOther) => walletApi.cashInByOther(data),
+    onSuccess: (data, variables) => {
+      // اگر لازم شد می‌توان cache را آپدیت کرد یا redux بروزرسانی کرد
+      console.log("CashInByOther success:", data);
+    },
+  });
+
+
+
   return {
     // Landing Page
     useLandingPageQuery,
@@ -92,6 +102,13 @@ export const useWallet = () => {
     denyLandingPage: denyLandingPageMutation.mutateAsync,
     isDenyingLandingPage: denyLandingPageMutation.isLoading,
 
+    // Cash In By Other
+    cashInByOther: cashInByOtherMutation.mutateAsync,
+    isCashInByOtherLoading: cashInByOtherMutation.isLoading,
+    cashInByOtherError: cashInByOtherMutation.error,
+    cashInByOtherData: cashInByOtherMutation.data,
+
+    //landingPage
     forceFetchLandingPage: landingPageMutation.mutate,  // fetch دستی و بروزرسانی cache
     forceFetchLandingPageAsync: landingPageMutation.mutateAsync,
     isLoadingLandingPage: landingPageMutation.isLoading,

@@ -366,3 +366,24 @@ export interface DtoOut_PaymentLink {
   response: Dto_Response;    // پاسخ سرور
 }
 
+// Request Object
+export interface DtoIn_cashInByOther {
+  amount: number;       // مبلغ پرداخت
+  currency: string;     // ارز
+  payerId?: string;     // شناسه پرداخت کننده، اختیاری
+  [key: string]: any;   // هر فیلد اضافی که بعداً اضافه شود
+}
+
+// Response Object
+export interface DtoOut_FinReq {
+  reference: number;           // شناسه درخواست
+  link: string;                // لینک پرداخت
+  response?: Dto_Response;     // پاسخ
+}
+
+// Response جزئی
+export interface Dto_Response {
+  status?: string;
+  message?: string;
+  [key: string]: any;
+}
