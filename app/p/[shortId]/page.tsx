@@ -6,55 +6,26 @@ import { Badge } from "@/components/radix/badge";
 import { CheckCircle, XCircle, Clock, AlertCircle } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
-
+import Image from "next/image";
 export default function PaymentPage() {
     const params = useParams();
+    const shortId = params?.shortId as string;
     const [paymentData, setPaymentData] = useState(null);
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+    // --- دیتا ---
+    const [data, setData] = useState<any>(null);
+    /* ---------------------- ری‌اکت کوئری (فعلا کامنت) ----------------------
+     const {
+       useLandingPageQuery,
+       acceptLandingPage,
+       denyLandingPage,
+       isAcceptingLandingPage,
+       isDenyingLandingPage
+     } = useWallet();
 
-    // Mock payment data based on shortId
-    useEffect(() => {
-        const mockData = {
-            id: params.shortId,
-            businessName: "کلینیک زیبایی دلوان",
-            businessPhone: "۰۲۱-۳۷۳۳۵۴۴",
-            businessTelegram: "@Delvinbiuty",
-            businessInstagram: "@DelVinSalon",
-            businessAddress: "تهران - انتهای خیابان ولیعصر - پلاک ۷۴ واحد ۱۸",
-            amount: "۲,۵۰۰,۰۰۰",
-            description: "بابت ویزیت دکتر محمود احمدی نژاد",
-            customerName: "مرتضی رئیسی فرد",
-            customerPhone: "۰۹۱۳ ۳۶۳ ۹۶۳۷",
-            status: params.shortId === "paid" ? "paid" : 
-                    params.shortId === "cancelled" ? "cancelled" :
-                    params.shortId === "expired" ? "expired" : "pending",
-            expiryDate: "۱۴۰۳/۰۶/۱۰ ۲۳:۰۹:۰۹"
-        };
-        setPaymentData(mockData);
-    }, [params.shortId]);
+     const { data, isLoading, error } = useLandingPageQuery({ shortId });
+     ------------------------------------------------------------------------- */
 
-    // Timer countdown
-    useEffect(() => {
-        if (paymentData?.status === "pending") {
-            const timer = setInterval(() => {
-                // Mock countdown - in real app, calculate from expiry date
-                setTimeLeft(prev => {
-                    if (prev.seconds > 0) {
-                        return { ...prev, seconds: prev.seconds - 1 };
-                    } else if (prev.minutes > 0) {
-                        return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
-                    } else if (prev.hours > 0) {
-                        return { ...prev, hours: prev.hours - 1, minutes: 59, seconds: 59 };
-                    } else if (prev.days > 0) {
-                        return { ...prev, days: prev.days - 1, hours: 23, minutes: 59, seconds: 59 };
-                    }
-                    return prev;
-                });
-            }, 1000);
-
-            return () => clearInterval(timer);
-        }
-    }, [paymentData?.status]);
 
     const getStatusInfo = (status) => {
         switch (status) {
@@ -88,6 +59,81 @@ export default function PaymentPage() {
                 };
         }
     };
+    // Mock payment data based on shortId
+    useEffect(() => {
+        const mockData = {
+            id: params.shortId,
+            businessName: "کلینیک زیبایی دلوان",
+            businessPhone: "۰۲۱-۳۷۳۳۵۴۴",
+            businessTelegram: "@Delvinbiuty",
+            businessInstagram: "@DelVinSalon",
+            businessAddress: "تهران - انتهای خیابان ولیعصر - پلاک ۷۴ واحد ۱۸",
+            amount: "۲,۵۰۰,۰۰۰",
+            description: "بابت ویزیت دکتر محمود احمدی نژاد",
+            customerName: "مرتضی رئیسی فرد",
+            customerPhone: "۰۹۱۳ ۳۶۳ ۹۶۳۷",
+            status: 'cancelled',
+            expiryDate: "۱۴۰۳/۰۶/۱۰ ۲۳:۰۹:۰۹"
+        };
+        setPaymentData(mockData);
+    }, [params.shortId]);
+
+    // Timer countdown
+
+
+    // تایمر (بر اساس expireAt)
+    useEffect(() => {
+        if (!data?.expireAt) return;
+        if (paymentData?.status === "pending") {
+            const interval = setInterval(() => {
+                const now = new Date().getTime();
+                const expire = new Date(data.expireAt).getTime();
+                const diff = expire - now;
+
+                if (diff <= 0) {
+                    clearInterval(interval);
+                    setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+                } else {
+                    setTimeLeft({
+                        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+                        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+                        minutes: Math.floor((diff / (1000 * 60)) % 60),
+                        seconds: Math.floor((diff / 1000) % 60),
+                    });
+                }
+            }, 1000);
+
+            return () => clearInterval(interval);
+        }
+
+    }, [data?.expireAt,paymentData?.status]);
+
+    const handleAccept = async () => {
+        try {
+            /* ------------------- وقتی بک‌اند آماده شد فعال کن -------------------
+            const res = await acceptLandingPage({ shortId });
+            if (res?.paymentLink) {
+              window.location.href = res.paymentLink; // انتقال به درگاه
+            }
+            --------------------------------------------------------------------- */
+            alert("پرداخت پذیرفته شد (فعلا تستی)");
+        } catch (err) {
+            console.error("Accept failed:", err);
+        }
+    };
+
+    const handleDeny = async () => {
+        try {
+            /* ------------------- وقتی بک‌اند آماده شد فعال کن -------------------
+            await denyLandingPage({ shortId });
+            --------------------------------------------------------------------- */
+            alert("پرداخت رد شد (فعلا تستی)");
+        } catch (err) {
+            console.error("Deny failed:", err);
+        }
+    };
+
+
 
     if (!paymentData) {
         return <div className="min-h-screen bg-gray-100 flex items-center justify-center">در حال بارگذاری...</div>;
@@ -104,7 +150,7 @@ export default function PaymentPage() {
                         <div className="w-10 h-6 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-sm transform -skew-x-12"></div>
                     </div>
                     <span className="text-lg font-medium">
-                        سامانه مدیریت سرمایه و پرداخت زیربال
+                         مدیریت سرمایه و پرداخت زرپال
                     </span>
                 </div>
             </div>
@@ -172,15 +218,31 @@ export default function PaymentPage() {
 
                     {/* Payment Button or Status */}
                     {paymentData.status === "pending" ? (
-                        <Button className="w-full bg-[#a85a7a] hover:bg-[#96527a] text-white py-6 text-xl font-bold mb-4 rounded-lg">
-                            <div className="text-center">
-                                <div className="text-2xl mb-1">پرداخت {paymentData.amount} ریال</div>
-                                <div className="text-sm font-normal flex items-center justify-center gap-2">
-                                    از طریق
-                                    <div className="w-12 h-4 bg-white/30 rounded"></div>
+
+                        <Button
+                            onClick={handleAccept}
+                            /* disabled={isAcceptingLandingPage} */ // وقتی سرویس آماده شد
+                            className="w-full bg-[#a85a7a] hover:bg-[#96527a] text-white py-6 text-xl font-bold mb-4 rounded-lg  h-[100px]"
+                        >
+                            <div className="text-cente ">
+                                <div className="text-2xl mb-1">
+                                    پرداخت {paymentData.amount.toLocaleString()} ریال
                                 </div>
+                                <div className="flex items-center justify-center gap-2">
+                                    <span className="text-sm font-normal">از طریق</span>
+                                    <Image
+                                        src="/images/logo.png"
+                                        alt="Logo"
+                                        width={80}   // 👈 عرض دلخواه
+                                        height={0}    // 👈 ارتفاع رو خود Next.js متناسب محاسبه می‌کنه
+                                        style={{ height: "auto" }}
+                                    />
+
+                                </div>
+
                             </div>
                         </Button>
+
                     ) : (
                         <div className="w-full bg-gray-300 text-gray-600 py-6 text-xl font-bold mb-4 rounded-lg text-center">
                             <div className="text-2xl mb-1">{paymentData.amount} ریال</div>
@@ -220,7 +282,7 @@ export default function PaymentPage() {
                         </div>
                         <p className="text-xs text-gray-600 text-center leading-relaxed">
                             از طریق لمس این لینک میتوانید کلیه فاکتورها و پرداخت های انجام شده
-                            در پلتفرم زیربال را مشاهده و مدیریت فرمایید.
+                            در پلتفرم زرپال را مشاهده و مدیریت فرمایید.
                         </p>
                     </div>
                 </div>

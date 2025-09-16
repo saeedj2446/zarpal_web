@@ -22,7 +22,7 @@ export default function DashboardPage() {
         { name: "تحویل", icon: "📦" },
         { name: "خرید حضوری", icon: "🛒" },
         { name: "خرید برخط", icon: "🏪" },
-        { name: "انتقال به زیربال", icon: "📊" },
+        { name: "انتقال به زرپال", icon: "📊" },
         { name: "انتقال داخلی", icon: "👥" },
       ],
     },
