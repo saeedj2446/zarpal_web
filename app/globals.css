@@ -121,7 +121,7 @@ body {
 
 /* Page layout constraints */
 .page-container {
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
   width: 100%;
 }
@@ -173,4 +173,27 @@ body {
   to {
     transform: rotate(360deg);
   }
+}
+
+/*
+############################Saeed Yousefi############################*/
+
+
+
+/* همه بولت‌ها */
+.swiper-pagination-bullet {
+  width: 16px !important;
+  height: 16px !important;
+  font-size: 12px !important;
+  line-height: 16px !important;
+  text-align: center;
+  color: #fff !important;
+  background: #cecece !important;
+  opacity: 1 !important;
+}
+
+/* بولت فعال */
+.swiper-pagination-bullet-active {
+  background: green !important;
+  transform: scale(1.1);
 }

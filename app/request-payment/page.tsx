@@ -55,7 +55,7 @@ export default function RequestPaymentPage() {
         </div>
 
         {/* Main Content */}
-        <div className="max-w-[800px] mx-auto p-4">
+        <div className="max-w-[1000px] mx-auto p-4">
           <UserWalletList/>
 
           {/* Request Form */}

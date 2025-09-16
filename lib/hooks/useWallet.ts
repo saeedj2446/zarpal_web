@@ -91,7 +91,8 @@ export const useWallet = () => {
 
 
   return {
-    // Landing Page
+    currentWallet,
+    setCurrentWalletValue,
     useLandingPageQuery,
 
 

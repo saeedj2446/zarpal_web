@@ -112,7 +112,7 @@ export default function PaymentPage() {
         </div>
 
         {/* Main Content */}
-        <div className="max-w-[800px] mx-auto p-4">
+        <div className="max-w-[1000px] mx-auto p-4">
           {/* Business Info Card */}
           <Card className="mb-6 bg-white shadow-lg">
             <CardContent className="p-6">

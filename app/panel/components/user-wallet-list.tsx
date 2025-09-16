@@ -6,11 +6,10 @@ import { Eye } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/navigation";
-import "swiper/css/pagination";
-import { Navigation, Pagination } from "swiper/modules";
+import { Navigation } from "swiper/modules";
 import { useWallet } from "@/lib/hooks/useWallet";
-import GoldRateBoard from "@/app/panel/components/gold-rate-board";
-import {useAuth} from "@/lib/hooks/useAuth";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { Skeleton } from "@/components/radix/skeleton";
 
 export interface Wallet {
     id: string;
@@ -28,87 +27,98 @@ interface WalletSliderProps {
     onSelectWallet?: (wallet: Wallet) => void;
 }
 
-export default function UserWalletList({  onSelectWallet }: WalletSliderProps) {
+export default function UserWalletList({ onSelectWallet }: WalletSliderProps) {
     const { setCurrentWalletValue, currentWallet } = useWallet();
-    const {profile={}} = useAuth();
-    const { purseList } = profile;
-    const [selectedId, setSelectedId] = useState<string | null>(null);
+    const { profile = {} } = useAuth();
+    const { purseList = [] } = profile;
+    const [activeIndex, setActiveIndex] = useState(0);
     const swiperRef = useRef<any>(null);
 
-    // ---------- مقداردهی اولیه روی persisted wallet ----------
+    // ---------- حالت لودینگ ----------
+    if (!currentWallet) {
+        return (
+            <div className="px-4 min-w-[250px] max-w-[400px] mb-12 mt-10 mx-auto">
+                <Skeleton className="w-full h-[130px] rounded-xl" />
+            </div>
+        );
+    }
+
+    // ---------- مقداردهی اولیه ----------
     useEffect(() => {
-        if (currentWallet) {
-            setSelectedId(currentWallet.id);
-            // پیدا کردن ایندکس کیف در لیست
-            const index = purseList.findIndex(w => w.id === currentWallet.id);
-            if (index >= 0 && swiperRef.current) {
-                swiperRef.current.slideTo(index, 0); // بلافاصله اسلاید می‌کنه
+        if (currentWallet && purseList.length > 0) {
+            const index = purseList.findIndex((w) => w.id === currentWallet.id);
+            if (index >= 0) {
+                setActiveIndex(index);
+                if (swiperRef.current) {
+                    swiperRef.current.slideTo(index, 0);
+                }
             }
         }
     }, [currentWallet, purseList]);
 
     const handleSelect = (wallet: Wallet) => {
-        setSelectedId(wallet.id);
+        setActiveIndex(purseList.findIndex((w) => w.id === wallet.id));
         setCurrentWalletValue(wallet);
         onSelectWallet?.(wallet);
     };
 
     return (
-        <div className="max-w-sm mb-4 overflow-hidden mx-auto bg-white rounded-xl shadow-md cursor-pointer transition-transform">
-            <Swiper
-                modules={[Navigation, Pagination]}
-                slidesPerView={1}
-                spaceBetween={20}
-                pagination={{ clickable: true }}
-                className="w-full max-w-md"
-                onSlideChange={(swiper) => {
-                    const activeIndex = swiper.activeIndex;
-                    const activeSlide = purseList[activeIndex];
-                    handleSelect(activeSlide);
-                }}
-                onSwiper={(swiper) => (swiperRef.current = swiper)}
-            >
-                {purseList.map((wallet) => (
-                    <SwiperSlide key={wallet.id}>
-                        <>
-                            <GoldRateBoard />
-                            <div className="p-1">
-                                <div
-                                    className={`px-4 ${
-                                        selectedId === wallet.id ? "border-0 border-purple-500 scale-105" : ""
-                                    }`}
-                                >
-                                    <div className="my-1 flex">
-                                        <div className="flex flex-1 flex-col justify-around gap-4">
-                                            <h2 className="text-base font-bold mt-4">
-                                                {wallet.title.substring(0, 20)}
-                                            </h2>
-                                            <div className="flex items-center gap-2 text-gray-600">
-                                                <Eye className="w-4 h-4" />
-                                                <h2 className="text-base font-bold mb-1">{19.34} گرم طلا</h2>
-                                            </div>
-                                            <div className="text-base text-gray-600">شناسه: {wallet.id}</div>
-                                        </div>
-                                        <div className="mt-3 gap-5">
-                                            <div className="w-[100px] h-[100px] bg-white rounded-full flex items-center justify-center border">
-                                                <span className="text-green-600 font-bold text-xs">{wallet.type}</span>
-                                            </div>
-                                            <div className="relative mt-4 h-[40px]">
-                                                <Image
-                                                    src="/images/logo.png"
-                                                    alt="Logo"
-                                                    fill
-                                                    style={{ objectFit: "contain" }}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
+        <Swiper
+            modules={[Navigation]}
+            spaceBetween={6}
+            slidesPerView="auto"
+            centeredSlides
+            onSlideChange={(swiper) => {
+                const wallet = purseList[swiper.realIndex];
+                if (wallet) handleSelect(wallet);
+            }}
+            onSwiper={(swiper) => (swiperRef.current = swiper)}
+            className="w-full max-w-5xl"
+        >
+            {purseList.map((wallet, i) => (
+                <SwiperSlide key={wallet.id} className="!w-[280px]">
+                    <div
+                        className={`px-4 min-w-[260px] max-w-[400px] my-4  overflow-hidden mx-auto 
+                                    rounded-2xl border-2 border-gray-400 cursor-pointer transition-transform duration-300
+                                    ${activeIndex === i
+                            ? "scale-105 shadow-lg bg-green-100"  
+                            : "scale-95 opacity-70 bg-white"     
+                        }`}
+                        onClick={() => handleSelect(wallet)}
+                        >
+                        <div className="my-1 flex">
+                            <div className="flex flex-1 flex-col justify-around gap-4">
+                                <h2 className="text-base font-bold mt-4">
+                                    {wallet.title.substring(0, 20)}
+                                </h2>
+                                <div className="flex items-center gap-2 text-gray-600">
+                                    <Eye className="w-4 h-4"/>
+                                    <h2 className="text-base font-bold mb-1">{19.34} گرم طلا</h2>
+                                </div>
+                                <div className="text-base text-gray-600">
+                                    شناسه: {wallet.id}
                                 </div>
                             </div>
-                        </>
-                    </SwiperSlide>
-                ))}
-            </Swiper>
-        </div>
+                            <div className="mt-3 gap-5">
+                                <div
+                                    className="w-[100px] h-[100px] bg-white rounded-full flex items-center justify-center border">
+                  <span className="text-green-600 font-bold text-xs">
+                    {wallet.type}
+                  </span>
+                                </div>
+                                <div className="relative mt-4 h-[40px]">
+                                    <Image
+                                        src="/images/logo.png"
+                                        alt="Logo"
+                                        fill
+                                        style={{objectFit: "contain"}}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </SwiperSlide>
+            ))}
+        </Swiper>
     );
 }

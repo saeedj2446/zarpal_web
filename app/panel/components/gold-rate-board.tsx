@@ -9,6 +9,7 @@ import { Currency, CurrencyTitle } from "@/lib/types";
 import { Timer } from "@/components/common";
 import { generateMyMac, increaseStringSize } from "@/lib/utils/utils";
 import jMoment from "moment-jalaali";
+import {Skeleton} from "@/components/radix/skeleton";
 
 export default function GoldRateBoard() {
     const { currentWallet } = useSelector((state: RootState) => state.wallet);
@@ -64,15 +65,13 @@ export default function GoldRateBoard() {
         return () => clearInterval(interval);
     }, [currentRate, refetch]);
 
-    if (!currentWallet) return <div>هیچ کیف فعالی انتخاب نشده</div>;
+
     const currency = currentWallet.currency;
 
-    if (isLoading) return <div>در حال دریافت نرخ {currency}...</div>;
-    if (isError) return <div>خطا در دریافت نرخ {currency}: {String((error as any)?.message || "")}</div>;
     if (!currentRate) return <div></div>;
 
     return (
-        <div className="bg-black text-white p-3 flex items-center justify-between">
+        <div className="mb-4 bg-black text-white p-1 flex items-center justify-between ">
             {/* تایمر سمت چپ */}
             <div className="rounded-full w-12 h-12 flex items-center justify-center">
                 {totalTime > 0 && (
@@ -85,11 +84,22 @@ export default function GoldRateBoard() {
                     />
                 )}
             </div>
+            {isError?(<>
+                <div>خطا در دریافت نرخ {currency}</div>
+            </>) : (<>
+                {isLoading ? (
+                    <div>در حال دریافت نرخ...</div>
+                ):(
+                    <div className="flex-1 flex justify-center items-center gap-2">
+                        <p className="text-white">نرخ هر گرم</p>
+                        <p className="text-xl">{currentRate.weSell}</p>
+                    </div>
+                )}
+            </>)}
 
-            <div className="flex-1 flex justify-center items-center gap-2">
-                <p className="text-white">نرخ هر گرم</p>
-                <p className="text-xl">{currentRate.weSell}</p>
-            </div>
+
+
+
 
             <div className="w-12 h-12"></div>
         </div>
