@@ -11,6 +11,7 @@ import {
 } from "@radix-ui/react-dropdown-menu";
 import { Eye, Receipt, CreditCard, List, FileText } from "lucide-react";
 import Link from "next/link";
+import TransactionsTable from "./transactions-table";
 import { Timer } from "@/components/common";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -25,19 +26,16 @@ import jMoment from "moment-jalaali";
 import GoldRateBoard from "@/app/panel/components/gold-rate-board";
 import {useEffect} from "react";
 
-
-
-
 export default function PanelForm() {
   const router = useRouter();
   const { sessionId,logout ,profile={}} = useAuth();
 
- useEffect(()=>{
-   if (!sessionId) {
-     router.replace("/login");
+  useEffect(()=>{
+    if (!sessionId) {
+      router.replace("/login");
 
-   }
- },[])
+    }
+  },[])
 
   const { fisrtName, lastName, fathersName, gender, nationality, natId, contact, birthDate,purseList } = profile;
   const { currentWallet} = useWallet();
@@ -48,56 +46,55 @@ export default function PanelForm() {
   };
 
   const menuItems = [
-  {
-      title: "درخواست واریز",
-      icon: <Receipt className="w-12 h-12 md:w-16 md:h-16" />,
-      href: "/request-payment",
-      color: "bg-blue-500 hover:bg-blue-600",
-    },
     {
-      title: "واریز با بارکد",
-      icon: <CreditCard className="w-12 h-12 md:w-16 md:h-16" />,
-      href: "/payment",
-      color: "bg-green-500 hover:bg-green-600",
-    },
-    {
-      title: "واریز مستقیم",
-      icon: <List className="w-12 h-12 md:w-16 md:h-16" />,
-      href: "/transactions",
-      color: "bg-purple-500 hover:bg-purple-600",
-    },
-    {
-      title: "فرم پرداخت",
-      icon: <FileText className="w-12 h-12 md:w-16 md:h-16" />,
-      href: "/invoice",
-      color: "bg-orange-500 hover:bg-orange-600",
-    },
-    {
-      title: "تراکنش ها",
-      icon: <FileText className="w-12 h-12 md:w-16 md:h-16" />,
-      href: "/withdraw",
-      color: "bg-teal-500 hover:bg-teal-600",
-    },
-    {
-      title: "انتقال طلا",
-      icon: <FileText className="w-12 h-12 md:w-16 md:h-16" />,
-      href: "/gold-delivery",
-      color: "bg-yellow-500 hover:bg-yellow-600 text-white font-bold",
-    },
+        title: "درخواست واریز",
+        icon: <Receipt className="w-12 h-12 md:w-16 md:h-16" />,
+        href: "/request-payment",
+        color: "bg-blue-500 hover:bg-blue-600",
+      },
+      {
+        title: "واریز با بارکد",
+        icon: <CreditCard className="w-12 h-12 md:w-16 md:h-16" />,
+        href: "/payment",
+        color: "bg-green-500 hover:bg-green-600",
+      },
+      {
+        title: "واریز مستقیم",
+        icon: <List className="w-12 h-12 md:w-16 md:h-16" />,
+        href: "/transactions",
+        color: "bg-purple-500 hover:bg-purple-600",
+      },
+      {
+        title: "فرم پرداخت",
+        icon: <FileText className="w-12 h-12 md:w-16 md:h-16" />,
+        href: "/invoice",
+        color: "bg-orange-500 hover:bg-orange-600",
+      },
+      {
+        title: "تراکنش ها",
+        icon: <FileText className="w-12 h-12 md:w-16 md:h-16" />,
+        href: "/withdraw",
+        color: "bg-teal-500 hover:bg-teal-600",
+      },
+      {
+        title: "انتقال طلا",
+        icon: <FileText className="w-12 h-12 md:w-16 md:h-16" />,
+        href: "/gold-delivery",
+        color: "bg-yellow-500 hover:bg-yellow-600 text-white font-bold",
+      },
   ];
 
   return (
       <div className="min-h-screen bg-gray-100 font-['iransans-number']">
         {/* Header */}
           <div className="bg-[#a85a7a] text-white p-1 px-2 flex items-center justify-between">
-              <div className="flex items-center gap-3 cursor-pointer">
+              <Link href="/profile" className="flex items-center gap-3 cursor-pointer">
                   <Avatar className="w-12 h-12">
                       <AvatarImage src="/placeholder-user.jpg"/>
                       <AvatarFallback>ا</AvatarFallback>
                   </Avatar>
                   <span className="text-lg">{(fisrtName + "" + lastName).substring(0, 15)}</span>
-              </div>
-
+              </Link>
 
               {/* Timer */}
               <div className="justify-center">
@@ -111,17 +108,14 @@ export default function PanelForm() {
                       />
                   )
                   }
-
               </div>
           </div>
-
 
           {/* Main Content */}
           <div className="max-w-[1000px] mx-auto ">
               <div className="h-130">
                   <UserWalletList/>
               </div>
-
 
               <GoldRateBoard/>
 
@@ -137,12 +131,15 @@ export default function PanelForm() {
                           >
                               {React.cloneElement(item.icon, {className: "w-12 h-12 md:w-16 md:h-16"})}
                               <span className="text-xs font-medium text-center">{item.title}</span>
-
                           </Button>
                       </Link>
                   ))}
               </div>
 
+              {/* Transactions Table */}
+              <div className="px-4 pb-6">
+                  <TransactionsTable />
+              </div>
           </div>
       </div>
   );
