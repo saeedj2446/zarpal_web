@@ -99,7 +99,6 @@ export default function PanelForm() {
               </div>
 
 
-              {/* Timer */}
               <div className="justify-center">
                   {currentWallet && (
                       <Timer
