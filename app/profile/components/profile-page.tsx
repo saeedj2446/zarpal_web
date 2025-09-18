@@ -5,8 +5,10 @@ import { Card, CardContent } from "@/components/radix/card";
 import { Button } from "@/components/radix/button";
 import { ArrowRight, Edit, Settings, CreditCard, FileText, BarChart3, Shield } from "lucide-react";
 import Link from "next/link";
+import {useAuth} from "@/lib/hooks/useAuth";
 
 export default function ProfileComponent() {
+  const { sessionId,logout ,profile={}} = useAuth();
   const menuItems = [
     {
       title: "مدیریت حساب",
@@ -52,7 +54,7 @@ export default function ProfileComponent() {
       </div>
 
       {/* Profile Section */}
-      <div className="max-w-[400px] mx-auto p-4">
+      <div className="max-w-[1000px] mx-auto p-4">
         <Card className="mb-6 bg-white shadow-lg">
           <CardContent className="p-6">
             <div className="flex flex-col items-center text-center">
@@ -113,7 +115,7 @@ export default function ProfileComponent() {
         </div>
 
         {/* Logout Button */}
-        <Button className="w-full mt-6 bg-red-500 hover:bg-red-600 text-white py-3">
+        <Button onClick={logout} className="w-full mt-6 bg-red-500 hover:bg-red-600 text-white py-3">
           خروج از حساب کاربری
         </Button>
       </div>

@@ -9,6 +9,7 @@ import gregorian from "react-date-object/calendars/gregorian";
 import gregorian_en from "react-date-object/locales/gregorian_en";
 import arabic from "react-date-object/calendars/arabic";
 import arabic_ar from "react-date-object/locales/arabic_ar";
+import jMoment from "moment-jalaali";
 
 interface DateSelectorProps
     extends Omit<DatePickerProps, "calendar" | "locale" | "value" | "onChange"> {
@@ -40,16 +41,19 @@ const DateSelector: React.FC<DateSelectorProps> = ({
 
     // تابع برای تبدیل تاریخ ISO به DateObject با در نظر گرفتن زمان محلی
     const parseISODate = (isoDate: string) => {
-        // اضافه کردن زمان به عنوان نیمه‌شب در زمان محلی
-        const localDate = new Date(isoDate + 'T00:00:00');
+        const localDate = new Date(isoDate);
         return new DateObject({
             year: localDate.getFullYear(),
             month: localDate.getMonth() + 1,
             day: localDate.getDate(),
+            hour: localDate.getHours(),      // اضافه شده
+            minute: localDate.getMinutes(),  // اضافه شده
+            second: localDate.getSeconds(),  // اگر لازم است
             calendar: gregorian,
             locale: gregorian_en
         });
     };
+
 
     // تابع برای تبدیل DateObject به تاریخ ISO
     const convertToISO = (dateObj: DateObject) => {
@@ -57,16 +61,17 @@ const DateSelector: React.FC<DateSelectorProps> = ({
         const date = new Date(
             gregorianDate.year,
             gregorianDate.month - 1,
-            gregorianDate.day
+            gregorianDate.day,
+            gregorianDate.hour || 0,      // اضافه شده
+            gregorianDate.minute || 0,    // اضافه شده
+            gregorianDate.second || 0     // اضافه شده
         );
 
-        // فرمت کردن تاریخ به صورت YYYY-MM-DD
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
+        //return date.toISOString(); // خروجی شامل ساعت و دقیقه و ثانیه
+        return jMoment(date).format("YYYY-MM-DD HH:mm:ss")
 
-        return `${year}-${month}-${day}`;
     };
+
 
     return (
         <DatePicker

@@ -88,8 +88,8 @@ export default function UserWalletList({ onSelectWallet }: WalletSliderProps) {
                         >
                         <div className="my-1 flex">
                             <div className="flex flex-1 flex-col justify-around gap-4">
-                                <h2 className="text-base font-bold mt-4">
-                                    {wallet.title.substring(0, 20)}
+                                <h2 className="text-sm font-bold mt-4">
+                                    {wallet.title}
                                 </h2>
                                 <div className="flex items-center gap-2 text-gray-600">
                                     <Eye className="w-4 h-4"/>
@@ -101,10 +101,10 @@ export default function UserWalletList({ onSelectWallet }: WalletSliderProps) {
                             </div>
                             <div className="mt-3 gap-5">
                                 <div
-                                    className="w-[100px] h-[100px] bg-white rounded-full flex items-center justify-center border">
-                  <span className="text-green-600 font-bold text-xs">
-                    {wallet.type}
-                  </span>
+                                    className="w-[80px] h-[80px] bg-white rounded-full flex items-center justify-center border">
+                                      <span className="text-green-600 font-bold text-xs">
+                                        {wallet.type}
+                                      </span>
                                 </div>
                                 <div className="relative mt-4 h-[40px]">
                                     <Image

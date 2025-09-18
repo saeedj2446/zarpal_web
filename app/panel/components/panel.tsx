@@ -93,7 +93,7 @@ export default function PanelForm() {
                       <AvatarImage src="/placeholder-user.jpg"/>
                       <AvatarFallback>ا</AvatarFallback>
                   </Avatar>
-                  <span className="text-lg">{(fisrtName + "" + lastName).substring(0, 15)}</span>
+                  <span className="text-lg">{(fisrtName + " " + lastName)}</span>
               </Link>
 
               <div className="justify-center">
@@ -112,12 +112,8 @@ export default function PanelForm() {
 
           {/* Main Content */}
           <div className="max-w-[1000px] mx-auto ">
-              <div className="h-130">
-                  <UserWalletList/>
-              </div>
-
+              <UserWalletList/>
               <GoldRateBoard/>
-
               {/* Menu Buttons */}
               <div className="flex flex-wrap justify-center gap-4 p-4">
                   {menuItems.map((item, index) => (

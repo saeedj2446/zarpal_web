@@ -6,7 +6,7 @@ import { ApiError } from "@/lib/api/apiError";
 import { store } from "@/lib/store/store";
 import {setAccessToken, setSessionId} from "@/lib/store/slices/authSlice";
 import { generateRefreshToken } from "@/lib/utils/utils";
-import { router } from "next/client";
+
 import { authApi } from "@/lib/api/auth";
 
 export const API_BASE = "https://staging.cytechnology.ir/GoldPay/V0100101";
@@ -21,12 +21,24 @@ export const setAuthToken = (token: string | null) => {
         store.dispatch(setAccessToken({ accessToken: token }));
     }
 };
-
 export const setAuthSessionId = (sessionId: string | null) => {
     if (sessionId) {
         authSessionId = sessionId;
         store.dispatch(setSessionId({ sessionId: sessionId }));
     }
+};
+
+export const getAuthToken = (token: string | null) => {
+    authToken=authToken ||  store.getState().auth.accessToken
+    return authToken;
+};
+
+export const getAuthSessionId = () => {
+    authSessionId=authSessionId ||  store.getState().auth.sessionId;
+    if(!authSessionId) {
+        window.location.href = "/login";
+    }
+    return authSessionId;
 };
 
 // axios instance
@@ -109,31 +121,25 @@ export const apiRequest = async <T = any>(
         options = options || {};
         options.headers = options.headers || {};
         const needSessionId = options.needSessionId !== false; // پیشفرض true
-
-        // اضافه کردن توکن
-        if (!authToken) {
-            const state = store.getState();
-            const persistedToken = state.auth.accessToken;
-            if (persistedToken) authToken = persistedToken;
-            else {
-                const refreshToken = await generateRefreshToken();
-                const newToken = await authApi.getToken(refreshToken);
-                setAuthToken(newToken.toString());
-            }
+        let token =getAuthToken();
+        if (!token) {
+            const refreshToken = await generateRefreshToken();
+            const token = await authApi.getToken(refreshToken);
+            setAuthToken(token.toString());
         }
+        options.headers.Authorization = `Bearer ${token}`;
 
-        if (authToken) {
-            options.headers.Authorization = `Bearer ${authToken}`;
-        }
 
         // اضافه کردن sessionId به بادی یا پارامترها
-        if (needSessionId && authSessionId) {
+        if (needSessionId!==false ) {
+            const sessionId=getAuthSessionId();
             if (options.data) {
-                options.data = { ...options.data, sessionId: authSessionId };
+                options.data = { ...options.data, sessionId };
             } else {
-                options.data = { sessionId: authSessionId };
+                options.data = { sessionId};
             }
         }
+
 
         let response: AxiosResponse<T>;
         try {
@@ -157,8 +163,8 @@ export const apiRequest = async <T = any>(
 
         if ((data as any).response) {
             const resp = (data as any).response;
-            if (resp.responseCode === 0) {
-                const { response, ...rest } = data;
+            if (resp.responseCode === 0){
+                const {response, ...rest } = data;
                 return rest as T;
             }
             throw new ApiError(resp.responseCode, resp.responseText || "خطای ناشناخته", resp.responseData);

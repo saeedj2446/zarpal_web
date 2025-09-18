@@ -175,8 +175,22 @@ body {
   }
 }
 
+
+
+
 /*
 ############################Saeed Yousefi############################*/
+
+/* styles/globals.css یا هر فایل CSS گلوبال شما */
+/* styles/globals.css یا فایل CSS گلوبال */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none !important; /* برداشتن خط آبی */
+  box-shadow: none !important; /* برداشتن shadow پیش‌فرض */
+}
+
+
 
 
 

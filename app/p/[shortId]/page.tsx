@@ -7,46 +7,62 @@ import { CheckCircle, XCircle, Clock, AlertCircle } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { useWallet } from "@/lib/hooks/useWallet";
+import jMoment from "moment-jalaali";
+
 export default function PaymentPage() {
-    const params = useParams();
-    const shortId = params?.shortId as string;
-    const [paymentData, setPaymentData] = useState(null);
+    const [paymentData, setPaymentData] = useState<any>(null);
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-    // --- دیتا ---
-    const [data, setData] = useState<any>(null);
-    /* ---------------------- ری‌اکت کوئری (فعلا کامنت) ----------------------
-     const {
-       useLandingPageQuery,
-       acceptLandingPage,
-       denyLandingPage,
-       isAcceptingLandingPage,
-       isDenyingLandingPage
-     } = useWallet();
 
-     const { data, isLoading, error } = useLandingPageQuery({ shortId });
-     ------------------------------------------------------------------------- */
+    const { useLandingPageQuery, acceptLandingPage } = useWallet();
+    const params = useParams();
+    const urlShortId = params?.shortId as string;
+    const shortId = decodeURIComponent(urlShortId);
 
+    const { data, isLoading, error } = useLandingPageQuery({ shortId });
 
-    const getStatusInfo = (status) => {
+    // Map وضعیت پرداخت به UI
+    const getStatusInfo = (status: string) => {
         switch (status) {
-            case 'paid':
+            case 'W':
+                return {
+                    icon: <Clock className="w-8 h-8 text-yellow-500" />,
+                    text: "در انتظار پرداخت",
+                    color: "bg-yellow-100 text-yellow-800 border-yellow-200",
+                    bgColor: "bg-yellow-50"
+                };
+            case 'P':
                 return {
                     icon: <CheckCircle className="w-8 h-8 text-green-500" />,
                     text: "پرداخت موفق",
                     color: "bg-green-100 text-green-800 border-green-200",
                     bgColor: "bg-green-50"
                 };
-            case 'cancelled':
+            case 'I':
                 return {
                     icon: <XCircle className="w-8 h-8 text-red-500" />,
-                    text: "پرداخت لغو شده",
+                    text: "پرداخت توسط دریافت کننده لغو شده",
                     color: "bg-red-100 text-red-800 border-red-200",
                     bgColor: "bg-red-50"
                 };
-            case 'expired':
+            case 'C':
+                return {
+                    icon: <XCircle className="w-8 h-8 text-red-500" />,
+                    text: "پرداخت توسط پرداخت کننده لغو شده",
+                    color: "bg-red-100 text-red-800 border-red-200",
+                    bgColor: "bg-red-50"
+                };
+            case 'E':
                 return {
                     icon: <AlertCircle className="w-8 h-8 text-gray-500" />,
                     text: "پرداخت منقضی شده",
+                    color: "bg-gray-100 text-gray-800 border-gray-200",
+                    bgColor: "bg-gray-50"
+                };
+            case 'F':
+                return {
+                    icon: <AlertCircle className="w-8 h-8 text-gray-500" />,
+                    text: "پرداخت با خطا مواجه شده",
                     color: "bg-gray-100 text-gray-800 border-gray-200",
                     bgColor: "bg-gray-50"
                 };
@@ -59,84 +75,66 @@ export default function PaymentPage() {
                 };
         }
     };
-    // Mock payment data based on shortId
+
+    // جایگزین کردن داده واقعی
     useEffect(() => {
-        const mockData = {
-            id: params.shortId,
-            businessName: "کلینیک زیبایی دلوان",
-            businessPhone: "۰۲۱-۳۷۳۳۵۴۴",
-            businessTelegram: "@Delvinbiuty",
-            businessInstagram: "@DelVinSalon",
-            businessAddress: "تهران - انتهای خیابان ولیعصر - پلاک ۷۴ واحد ۱۸",
-            amount: "۲,۵۰۰,۰۰۰",
-            description: "بابت ویزیت دکتر محمود احمدی نژاد",
-            customerName: "مرتضی رئیسی فرد",
-            customerPhone: "۰۹۱۳ ۳۶۳ ۹۶۳۷",
-            status: 'cancelled',
-            expiryDate: "۱۴۰۳/۰۶/۱۰ ۲۳:۰۹:۰۹"
-        };
-        setPaymentData(mockData);
-    }, [params.shortId]);
-
-    // Timer countdown
-
-
-    // تایمر (بر اساس expireAt)
-    useEffect(() => {
-        if (!data?.expireAt) return;
-        if (paymentData?.status === "pending") {
-            const interval = setInterval(() => {
-                const now = new Date().getTime();
-                const expire = new Date(data.expireAt).getTime();
-                const diff = expire - now;
-
-                if (diff <= 0) {
-                    clearInterval(interval);
-                    setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-                } else {
-                    setTimeLeft({
-                        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-                        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
-                        minutes: Math.floor((diff / (1000 * 60)) % 60),
-                        seconds: Math.floor((diff / 1000) % 60),
-                    });
-                }
-            }, 1000);
-
-            return () => clearInterval(interval);
+        if (data) {
+            setPaymentData({
+                id: shortId,
+                businessName: data.purse.title,
+                businessPhone: "۰۲۱-۳۷۳۳۵۴۴",
+                businessTelegram: "@Delvinbiuty",
+                businessInstagram: "@DelVinSalon",
+                businessAddress: "تهران - انتهای خیابان ولیعصر - پلاک ۷۴ واحد ۱۸",
+                amount: data.amount.toLocaleString(),
+                description: data.desc,
+                customerName: data.payerTitle,
+                customerPhone: data.payerContact,
+                ...data,
+            });
         }
+    }, [data]);
 
-    }, [data?.expireAt,paymentData?.status]);
+    // تایمر براساس expiredOn
+    useEffect(() => {
+        if (!paymentData?.expiredOn || paymentData.status !== "W") return;
+
+        const interval = setInterval(() => {
+            const now = new Date().getTime();
+            const expire = new Date(paymentData.expiredOn).getTime();
+            const diff = expire - now;
+
+            if (diff <= 0) {
+                clearInterval(interval);
+                setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+            } else {
+                setTimeLeft({
+                    days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+                    hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+                    minutes: Math.floor((diff / (1000 * 60)) % 60),
+                    seconds: Math.floor((diff / 1000) % 60),
+                });
+            }
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [paymentData]);
 
     const handleAccept = async () => {
         try {
-            /* ------------------- وقتی بک‌اند آماده شد فعال کن -------------------
             const res = await acceptLandingPage({ shortId });
-            if (res?.paymentLink) {
-              window.location.href = res.paymentLink; // انتقال به درگاه
-            }
-            --------------------------------------------------------------------- */
-            alert("پرداخت پذیرفته شد (فعلا تستی)");
+            if (res?.paymentLink) window.location.href = res.paymentLink;
         } catch (err) {
             console.error("Accept failed:", err);
         }
     };
 
-    const handleDeny = async () => {
-        try {
-            /* ------------------- وقتی بک‌اند آماده شد فعال کن -------------------
-            await denyLandingPage({ shortId });
-            --------------------------------------------------------------------- */
-            alert("پرداخت رد شد (فعلا تستی)");
-        } catch (err) {
-            console.error("Deny failed:", err);
-        }
-    };
-
-
-
-    if (!paymentData) {
+    // لودینگ و خطا
+    if (isLoading || !paymentData) {
         return <div className="min-h-screen bg-gray-100 flex items-center justify-center">در حال بارگذاری...</div>;
+    }
+    if (error) {
+        return <div className="min-h-screen bg-gray-100 flex items-center justify-center text-red-500">خطا در بارگیری اطلاعات</div>;
     }
 
     const statusInfo = getStatusInfo(paymentData.status);
@@ -156,7 +154,7 @@ export default function PaymentPage() {
             </div>
 
             {/* Main Content */}
-            <div className="max-w-[400px] mx-auto p-4">
+            <div className="max-w-[1000px] mx-auto p-4">
                 {/* Status Badge */}
                 <div className={`${statusInfo.bgColor} rounded-lg p-4 mb-6 text-center`}>
                     <div className="flex items-center justify-center gap-3 mb-2">
@@ -176,9 +174,9 @@ export default function PaymentPage() {
                             </div>
                             <div className="flex-1 text-right">
                                 <h2 className="text-xl font-bold mb-2">{paymentData.businessName}</h2>
-                                <p className="text-gray-600 text-sm mb-3">
-                                    زیبایی را با دلوان تجربه کنید
-                                </p>
+                                {/*<p className="text-gray-600 text-sm mb-3">
+                                    زیبایی را با ما تجربه کنید
+                                </p>*/}
                             </div>
                         </div>
 
@@ -187,14 +185,14 @@ export default function PaymentPage() {
                                 <span className="font-medium">تلفن :</span>
                                 <span>{paymentData.businessPhone}</span>
                             </div>
-                            <div className="flex justify-between items-center py-1">
+                           {/* <div className="flex justify-between items-center py-1">
                                 <span className="font-medium">تلگرام :</span>
                                 <span>{paymentData.businessTelegram}</span>
                             </div>
                             <div className="flex justify-between items-center py-1">
                                 <span className="font-medium">اینستاگرام :</span>
                                 <span>{paymentData.businessInstagram}</span>
-                            </div>
+                            </div>*/}
                             <div className="flex justify-between items-start py-1">
                                 <span className="font-medium">آدرس :</span>
                                 <span className="text-right max-w-[200px]">{paymentData.businessAddress}</span>
@@ -205,53 +203,60 @@ export default function PaymentPage() {
 
                 {/* Payment Details */}
                 <div className="bg-gray-200 rounded-lg p-4 space-y-4">
-                    <h3 className="text-center font-medium text-gray-700 mb-4">
-                        توضیحات : {paymentData.description}
+
+                    <div className="flex text-sm gap-2">
+                        <div className="text-sm font-normal">تاریخ:</div>
+                        {new Date(paymentData.createdOn).toLocaleDateString("fa-IR")}
+                        {" "}{" "}
+                        {new Date(paymentData.createdOn).toLocaleTimeString("fa-IR")}
+                    </div>
+                    <h3 className="text-sm pb-4">
+                        شماره پیگیری : {paymentData.reqiId}
+                    </h3>
+                    <h3 className="font-medium text-lg font-bold text-gray-700 pb-1">
+                        بابت : {paymentData.description}
                     </h3>
 
+
                     {/* Image Placeholders */}
-                    <div className="grid grid-cols-3 gap-3 mb-6">
+                    {/* <div className="grid grid-cols-3 gap-3 mb-6">
                         <div className="bg-white rounded-lg aspect-square border-2 border-dashed border-gray-300"></div>
                         <div className="bg-white rounded-lg aspect-square border-2 border-dashed border-gray-300"></div>
                         <div className="bg-white rounded-lg aspect-square border-2 border-dashed border-gray-300"></div>
-                    </div>
+                    </div>*/}
 
                     {/* Payment Button or Status */}
-                    {paymentData.status === "pending" ? (
-
+                    {paymentData.status === "W" ? (
                         <Button
                             onClick={handleAccept}
-                            /* disabled={isAcceptingLandingPage} */ // وقتی سرویس آماده شد
-                            className="w-full bg-[#a85a7a] hover:bg-[#96527a] text-white py-6 text-xl font-bold mb-4 rounded-lg  h-[100px]"
+                            className="w-full bg-[#a85a7a] hover:bg-[#96527a] text-white py-6 text-xl font-bold mb-4 rounded-lg h-[100px]"
                         >
-                            <div className="text-cente ">
+                            <div className="text-center">
                                 <div className="text-2xl mb-1">
-                                    پرداخت {paymentData.amount.toLocaleString()} ریال
+                                    پرداخت {paymentData.amount} ریال
                                 </div>
                                 <div className="flex items-center justify-center gap-2">
                                     <span className="text-sm font-normal">از طریق</span>
                                     <Image
                                         src="/images/logo.png"
                                         alt="Logo"
-                                        width={80}   // 👈 عرض دلخواه
-                                        height={0}    // 👈 ارتفاع رو خود Next.js متناسب محاسبه می‌کنه
-                                        style={{ height: "auto" }}
+                                        width={80}
+                                        height={0}
+                                        style={{height: "auto"}}
                                     />
-
                                 </div>
-
                             </div>
                         </Button>
-
                     ) : (
-                        <div className="w-full bg-gray-300 text-gray-600 py-6 text-xl font-bold mb-4 rounded-lg text-center">
+                        <div
+                            className="w-full bg-gray-300 text-gray-600 py-6 text-xl font-bold mb-4 rounded-lg text-center">
                             <div className="text-2xl mb-1">{paymentData.amount} ریال</div>
                             <div className="text-sm font-normal">{statusInfo.text}</div>
                         </div>
                     )}
 
-                    {/* Timer - only show for pending payments */}
-                    {paymentData.status === "pending" && (
+                    {/* Timer - only for waiting payments */}
+                    {paymentData.status === "W" && (
                         <div className="bg-white rounded-lg p-4 mb-4">
                             <div className="text-center text-gray-600 mb-3 font-medium">قابل پرداخت تا</div>
                             <div className="grid grid-cols-4 gap-2 text-center">

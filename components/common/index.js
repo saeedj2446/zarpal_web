@@ -14,6 +14,8 @@ import XKeyboardAvoidingView from "./XKeyboardAvoidingView";
 import XRefreshControl from "./XRefreshControl";
 import XSlider from "./XSlider";
 import Timer from "./Timer";
+import {FloatingLabel} from "./FloatingLabel";
+import {NumberInput} from "./NumberInput";
 
 export {
     XView,
@@ -32,4 +34,6 @@ export {
     XRefreshControl,
     XSlider,
     Timer,
+    FloatingLabel,
+    NumberInput,
 };

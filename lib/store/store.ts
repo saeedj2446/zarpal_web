@@ -5,7 +5,7 @@ import authReducer from "./slices/authSlice";
 import { todoSlice } from "./slices/todoSlice";
 import walletReducer from "./slices/walletSlice";
 
-const aothPersistConfig = {
+const authPersistConfig = {
     key: "auth",
     storage,
     whitelist: ["accessToken", "sessionId", "profile"], // فقط این فیلدها persist می‌شوند
@@ -16,7 +16,7 @@ const walletPersistConfig = {
     whitelist: ["currentWallet"],
 };
 
-const persistedAuthReducer = persistReducer(aothPersistConfig, authReducer);
+const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);
 const persistedWalletReducer = persistReducer(walletPersistConfig, walletReducer);
 
 export const store = configureStore({

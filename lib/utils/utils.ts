@@ -1,7 +1,11 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import {type ClassValue, clsx} from "clsx"
+import {twMerge} from "tailwind-merge"
 import {generateJWT} from "@/lib/utils/jwt/JWT";
 import {generateMac} from "@/lib/utils/jwt/HashPass";
+import Num2persian from "@/lib/utils/Num2persian";
+import jMoment from "moment-jalaali";
+import {DateObject} from "react-multi-date-picker";
+import gregorian from "react-date-object/calendars/gregorian";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -57,6 +61,28 @@ export const normalizePhoneNumber=(phone: string): string=> {
   return digits;
 }
 
+export const normalizeDate = (value: DateObject | string) => {
+  if (value instanceof DateObject) {
+    const gregorianDate = value.convert(gregorian);
+    const date = new Date(
+        gregorianDate.year,
+        gregorianDate.month - 1,
+        gregorianDate.day,
+        gregorianDate.hour || 0,
+        gregorianDate.minute || 0,
+        gregorianDate.second || 0
+    );
+
+    return jMoment(date).format("YYYY-MM-DD HH:mm:ss")
+  }
+  // اگر رشته بود فرض کن از قبل فرمت درست داره
+  return value;
+};
+
+
+
+
+
 export const hexToBytes=(hex: string): Uint8Array=> {
   if (hex.length % 2 !== 0) {
     throw new Error("رشته هگز باید طولی زوج داشته باشد");
@@ -79,4 +105,15 @@ export function diffDate(start: string, end: string): number {
   // اختلاف به روز
   return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 }
+
+export const rial2Toman = (amount?: number | string): string => {
+  if (!amount) return '';
+  const totalRial = Number(amount);
+  const toman = Math.floor(totalRial / 10);
+  const riyal = totalRial % 10;
+  //const tomanF = Num2persian(toman) + ' تومان';
+  //const riyalF = riyal ? ` و ${Num2persian(riyal)} ریال` : '';
+  //return tomanF + riyalF;
+  return Num2persian(toman);
+};
 
