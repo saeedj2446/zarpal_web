@@ -195,6 +195,7 @@ export function RegisterForm() {
                                 <Input
                                     {...field}
                                     type="tel"
+                                    maxLength={11}
                                     placeholder="شماره همراه"
                                     className="w-full h-12 rounded-md text-right bg-white border border-gray-300"
                                     dir="rtl"

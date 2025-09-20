@@ -150,7 +150,7 @@ export default function RequestPaymentPage() {
                                                         label="شماره همراه پرداخت کننده"
                                                         icon={<Phone className="w-5 h-5 text-gray-400" />}
                                                     >
-                                                        <Input {...field} className="w-full" dir="rtl" />
+                                                        <Input {...field} maxLength={11}      className="w-full" dir="rtl" />
                                                     </FloatingLabel>
                                                 </FormControl>
                                                 <FormMessage className="text-right text-red-500 text-sm">{fieldState.error?.message}</FormMessage>

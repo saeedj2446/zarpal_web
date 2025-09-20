@@ -8,6 +8,7 @@ interface AuthState {
     sessionId: string | null;
     otpSeconds: number;
     profile?: Dto_UserProfile;
+    sessionExpired: boolean;
 }
 
 const initialState: AuthState = {
@@ -15,6 +16,7 @@ const initialState: AuthState = {
     sessionId: null,
     otpSeconds: 0,
     profile: undefined,
+    sessionExpired: false,
 };
 
 export const authSlice = createSlice({
@@ -44,6 +46,9 @@ export const authSlice = createSlice({
         setProfile: (state, action: PayloadAction<AuthState["profile"]>) => {
             state.profile = action.payload;
         },
+        setSessionExpired: (state, action: PayloadAction<boolean>) => {
+            state.sessionExpired = action.payload;
+        },
 
     },
 });
@@ -55,6 +60,7 @@ export const {
     tickOtpSeconds,
     logout,
     setProfile,
+    setSessionExpired,
 } = authSlice.actions;
 
 export default authSlice.reducer;

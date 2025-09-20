@@ -6,9 +6,12 @@ import Link from "next/link";
 import AccountSlider from "./account-slider";
 import AccountForm from "./account-form";
 import PackageSlider from "./package-slider";
+import {setCurrentWallet} from "@/lib/store/slices/walletSlice";
+import {useWallet} from "@/lib/hooks/useWallet";
 
 export default function AccountManagementComponent() {
-  const [selectedAccount, setSelectedAccount] = useState(null);
+  const  {currentWallet}=useWallet();
+  const [selectedAccount, setSelectedAccount] = useState(currentWallet);
   const [isNewAccount, setIsNewAccount] = useState(false);
 
   const handleAccountSelect = (account) => {
@@ -22,7 +25,7 @@ export default function AccountManagementComponent() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 font-['iransans']">
+    <div className="min-h-screen bg-gray-100 ">
       {/* Header */}
       <div className="bg-[#a85a7a] text-white p-4 flex items-center justify-between">
         <Link href="/profile" className="text-white">
@@ -33,12 +36,12 @@ export default function AccountManagementComponent() {
       </div>
 
       {/* Account Slider */}
-      <div className="py-6">
-        <AccountSlider onAccountSelect={handleAccountSelect} />
+      <div className="py-8">
+        <AccountSlider onChange={handleAccountSelect} />
       </div>
 
       {/* Account Form */}
-      <div className="max-w-[400px] mx-auto px-4">
+      <div className="max-w-[700px] mx-auto px-4">
         <AccountForm 
           selectedAccount={selectedAccount} 
           isNewAccount={isNewAccount}

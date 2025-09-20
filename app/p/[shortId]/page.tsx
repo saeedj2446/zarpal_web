@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useWallet } from "@/lib/hooks/useWallet";
 import jMoment from "moment-jalaali";
+import {formatNumber} from "@/lib/utils/utils";
 
 export default function PaymentPage() {
     const [paymentData, setPaymentData] = useState<any>(null);
@@ -20,7 +21,7 @@ export default function PaymentPage() {
     const shortId = decodeURIComponent(urlShortId);
 
     const { data, isLoading, error } = useLandingPageQuery({ shortId });
-
+    const {forceFetchLandingPage}=useWallet();
     // Map وضعیت پرداخت به UI
     const getStatusInfo = (status: string) => {
         switch (status) {
@@ -129,18 +130,33 @@ export default function PaymentPage() {
         }
     };
 
-    // لودینگ و خطا
-    if (isLoading || !paymentData) {
-        return <div className="min-h-screen bg-gray-100 flex items-center justify-center">در حال بارگذاری...</div>;
-    }
     if (error) {
-        return <div className="min-h-screen bg-gray-100 flex items-center justify-center text-red-500">خطا در بارگیری اطلاعات</div>;
+        return (
+            <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center text-red-500 gap-4">
+                <div>خطا در بارگیری اطلاعات</div>
+                <Button
+                    onClick={() => forceFetchLandingPage({ shortId })}
+                    className="bg-[#a85a7a] hover:bg-[#96527a] text-white"
+                >
+                    تلاش مجدد
+                </Button>
+            </div>
+        );
+    }
+
+
+    if (isLoading || !paymentData) {
+        return (
+            <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+                در حال بارگذاری...
+            </div>
+        );
     }
 
     const statusInfo = getStatusInfo(paymentData.status);
 
     return (
-        <div className="min-h-screen bg-gray-100 font-['iransans']">
+        <div className="min-h-screen bg-gray-100 ">
             {/* Header */}
             <div className="bg-[#a85a7a] text-white p-4 text-center relative">
                 <div className="flex items-center justify-center gap-3">
@@ -173,7 +189,7 @@ export default function PaymentPage() {
                                 <span className="text-green-600 font-bold text-sm">Delvan</span>
                             </div>
                             <div className="flex-1 text-right">
-                                <h2 className="text-xl font-bold mb-2">{paymentData.businessName}</h2>
+                                <h2 className="text-base font-bold mb-2">{paymentData.businessName}</h2>
                                 {/*<p className="text-gray-600 text-sm mb-3">
                                     زیبایی را با ما تجربه کنید
                                 </p>*/}
@@ -233,7 +249,7 @@ export default function PaymentPage() {
                         >
                             <div className="text-center">
                                 <div className="text-2xl mb-1">
-                                    پرداخت {paymentData.amount} ریال
+                                    پرداخت {formatNumber(paymentData.amount)} ریال
                                 </div>
                                 <div className="flex items-center justify-center gap-2">
                                     <span className="text-sm font-normal">از طریق</span>
@@ -250,7 +266,7 @@ export default function PaymentPage() {
                     ) : (
                         <div
                             className="w-full bg-gray-300 text-gray-600 py-6 text-xl font-bold mb-4 rounded-lg text-center">
-                            <div className="text-2xl mb-1">{paymentData.amount} ریال</div>
+                            <div className="text-2xl mb-1">{formatNumber(paymentData.amount)} ریال</div>
                             <div className="text-sm font-normal">{statusInfo.text}</div>
                         </div>
                     )}

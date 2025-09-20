@@ -13,7 +13,7 @@ export default function Timer({
                                   size = 100,
                                   emptyColor = "rgba(245, 245, 245, 0.3)",
                                   fillColor = "#F59E0B",
-                                  textColor,
+                                  textColor= "#3a3836",
                               }: OtpTimerProps) {
     if (currentTime <= 0) return null;
 

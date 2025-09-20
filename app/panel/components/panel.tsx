@@ -95,7 +95,6 @@ export default function PanelForm() {
                   </Avatar>
                   <span className="text-lg">{(fisrtName + " " + lastName)}</span>
               </Link>
-
               <div className="justify-center">
                   {currentWallet && (
                       <Timer

@@ -54,6 +54,12 @@ export const authApi = {
       needSessionId: false,
     });
   },
+  logout: async (data: DtoOut_Session): Promise<DtoOutLoginStatic> => {
+    return apiRequest("/logout", {
+      method: "POST",
+      data,
+    });
+  },
 
   forgetPassword: async (data: {
     phone: string;

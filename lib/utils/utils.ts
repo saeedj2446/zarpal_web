@@ -7,6 +7,15 @@ import jMoment from "moment-jalaali";
 import {DateObject} from "react-multi-date-picker";
 import gregorian from "react-date-object/calendars/gregorian";
 
+export function formatNumber(val: string | number | null | undefined): string {
+  if (val === null || val === undefined) return "";
+
+  const num = typeof val === "string" ? Number(val) : val;
+  if (isNaN(num)) return "";
+
+  return num.toLocaleString("en-US");
+}
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
@@ -117,3 +126,6 @@ export const rial2Toman = (amount?: number | string): string => {
   return Num2persian(toman);
 };
 
+export function decodeBase64(str:any) {
+  return btoa(unescape(encodeURIComponent(str)));
+}

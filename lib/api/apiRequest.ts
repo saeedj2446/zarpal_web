@@ -4,7 +4,7 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { ApiError } from "@/lib/api/apiError";
 import { store } from "@/lib/store/store";
-import {setAccessToken, setSessionId} from "@/lib/store/slices/authSlice";
+import {setAccessToken, setSessionExpired, setSessionId} from "@/lib/store/slices/authSlice";
 import { generateRefreshToken } from "@/lib/utils/utils";
 
 import { authApi } from "@/lib/api/auth";
@@ -62,6 +62,8 @@ export const publicApiRequest = async <T = any>(
             if (resp.responseCode === 0) {
                 const { response, ...rest } = data;
                 return rest as T;
+            }else if (resp.responseCode === 1) {
+                store.dispatch(setSessionExpired(true));
             }
             else throw new ApiError(resp.responseCode, resp.responseText || "خطای ناشناخته", resp.responseData);
         }
@@ -166,6 +168,8 @@ export const apiRequest = async <T = any>(
             if (resp.responseCode === 0){
                 const {response, ...rest } = data;
                 return rest as T;
+            }else if (resp.responseCode === 1) {
+                store.dispatch(setSessionExpired(true));
             }
             throw new ApiError(resp.responseCode, resp.responseText || "خطای ناشناخته", resp.responseData);
         }

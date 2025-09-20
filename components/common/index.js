@@ -16,6 +16,7 @@ import XSlider from "./XSlider";
 import Timer from "./Timer";
 import {FloatingLabel} from "./FloatingLabel";
 import {NumberInput} from "./NumberInput";
+import FileUploader from "./FileUploader";
 
 export {
     XView,
@@ -36,4 +37,6 @@ export {
     Timer,
     FloatingLabel,
     NumberInput,
+    FileUploader
+
 };

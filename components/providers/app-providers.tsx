@@ -1,6 +1,7 @@
 "use client"
 
-import type { ReactNode } from "react"
+import React from "react";
+import type { ReactNode } from "react";
 import { Provider } from "react-redux"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
@@ -8,7 +9,8 @@ import { store } from "../../lib/store/store"
 import { Toaster } from "../radix/toaster"
 import { ThemeProvider } from "../theme-provider"
 import { DirectionProvider } from "@radix-ui/react-direction"
-import TokenProvider from "@/components/providers/tokenProvider"; // مسیر به AuthWrapper
+import TokenProvider from "@/components/providers/tokenProvider";
+import SessionProvider from "@/components/providers/sessionProvider"; // مسیر به AuthWrapper
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,7 +37,9 @@ export function AppProviders({ children }: AppProvidersProps) {
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
             <DirectionProvider dir="rtl">
               <TokenProvider h={20}>
-                {children}
+                <SessionProvider>
+                  {children}
+                </SessionProvider>
               </TokenProvider>
               <Toaster />
             </DirectionProvider>

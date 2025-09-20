@@ -76,6 +76,7 @@ export function LoginForm() {
                             <Input
                                 {...field}
                                 type="tel"
+                                maxLength={11}
                                 placeholder="شماره همراه"
                                 className="pr-14 h-14 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 text-lg text-right"
                                 dir="rtl"

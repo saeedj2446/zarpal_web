@@ -213,15 +213,28 @@ export interface Dto_Permition {
 
 
 export interface Dto_Purse {
-  id: string;                 // PurseId (M) → شناسه کیف (رشته یکتا)
-  title?: string;             // Text(128) (O) → عنوان
-  type: PurseType;            // Char (M) → نوع کیف
-  createdOn: string;          // Timestamp (M) → زمان افتتاح
-  status: PurseStatus;        // Char (M) → وضعیت
-  level: Dto_Level;           // Dto_Level[O] (M) → سطح عملیاتی
-  active?: Dto_Permition;     // Dto_Permition[O] (O) → مجوز استفاده فعال
-  reserved?: Dto_Permition;   // Dto_Permition[O] (O) → مجوز استفاده رزرو
+  id: string;                // PurseId (M) → شناسه یکتا کیف
+  title?: string;            // Text(128) (O) → عنوان (در صورت وجود)
+  type: PurseType;           // Text(8) (M) → نوع کیف
+  currency: Currency;        // Text(8) (M) → ارز کیف
+  createdOn: string;         // Timestamp (M) → زمان افتتاح
+  status: PurseStatus;       // Char (M) → وضعیت کیف
+  level: Dto_Level;          // Dto_Level[O] (M) → سطح عملیاتی
+  active?: Dto_Permition;    // Dto_Permition[O] (O) → مجوز فعال
+  reserved?: Dto_Permition;  // Dto_Permition[O] (O) → مجوز رزرو
+
+  // Contact Info
+  contact?: string;          // CellPhone (O) → شماره تماس
+  landLine?: string;         // Text(16) (O) → شماره ثابت
+  fax?: string;              // Text(16) (O) → فکس
+  email?: string;            // Text(64) (O) → ایمیل
+  provinceId?: number;       // Short (O) → کد استان
+  city?: string;             // Text(128) (O) → شهرستان
+  address?: string;          // Text(256) (O) → بقیه آدرس
+  postalCode?: string;       // PostalCode (O) → کد پستی
+  iconId?: number;           // Long (O) → شناسه فایل آیکون
 }
+
 
 // ----------------- Dto_UserProfile -----------------
 
@@ -386,4 +399,59 @@ export interface Dto_Response {
   status?: string;
   message?: string;
   [key: string]: any;
+}
+
+// types/file.ts
+
+export interface Dto_Media {
+  id: number;          // شناسه فایل
+  version?: number;    // شماره نسخه، در صورت حذف آخرین نسخه در نظر گرفته می‌شود
+}
+
+// types/file.ts (ادامه فایل قبلی)
+
+export interface DtoIn_File {
+  transType?: "S";      // نحوه انتقال محتوی فایل
+  type: string;         // نوع فایل (Text(8))
+  name: string;         // نام فایل (Text(64))
+  path?: string;        // مسیر پیشنهادی (Text(128))
+  content?: ArrayBuffer | string; // محتوی فایل (Binary)، اجباری در صورت transType = S
+  clientTime: string;   // Timestamp
+  mac: string;          // Byte(8)
+}
+
+export interface DtoOut_putFile {
+  response: Dto_Response; // پاسخ
+  file: Dto_Media;        // شناسه فایل آپلود شده
+}
+
+export interface DtoIn_getFile {
+  file: Dto_Media;     // فایل مورد نظر
+  transType?: "S";     // نحوه انتقال محتوی فایل (S → سرویس)
+  clientTime: string;  // زمان کلاینت
+  mac: string;         // کد امنیتی
+}
+
+export interface DtoOut_File {
+  response: Dto_Response;   // پاسخ
+  fileVersion: number;      // ورژن فایل
+  type: string;             // نوع فایل
+  name: string;             // نام فایل
+  path?: string;            // مسیر پیشنهادی
+  content?: string | ArrayBuffer; // محتوی فایل در صورت transType = S
+}
+
+// ----------------- DtoIn_PurseInfo -----------------
+export interface DtoIn_PurseInfo {
+  sessionId: string;    // Byte(6) (M) → شناسه جلسه کاری
+  purse: Dto_Purse;     // Dto_Purse[I] (M) → مشخصات کیف
+}
+
+// ----------------- DtoOut_Response -----------------
+export interface DtoOut_Response {
+  response: Dto_Response;  // Dto_Response[O] (M) → پاسخ
+}
+
+export interface DtoIn_ShortId {
+  id: number;    // آیدی لیست
 }

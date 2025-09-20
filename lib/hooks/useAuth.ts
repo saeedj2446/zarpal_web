@@ -51,7 +51,17 @@ export const useAuth = () => {
 
   const setProfileValue = (u: typeof profile) => dispatch(setProfile(u))
 
-  const logoutState = () => dispatch(logout())
+
+  const logoutState = useMutation({
+    mutationFn: async () => authApi.logout(),
+  });
+
+  const handleLogout = () => {
+    dispatch(logout());      // اول سمت کلاینت خارجش می‌کنی
+    logoutState.mutate();    // بعدش درخواست سمت سرور رو می‌زنی
+  };
+
+
 
   // ✅ گرفتن توکن
   const getToken = useMutation({
@@ -271,7 +281,7 @@ export const useAuth = () => {
     setOtpSeconds: setOtpSecondsValue,
     startOtp,
     setProfile: setProfileValue,
-    logout: logoutState,
+    logout: handleLogout,
     // mutations
 
     // loading states

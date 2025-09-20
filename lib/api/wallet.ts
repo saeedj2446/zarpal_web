@@ -1,6 +1,6 @@
 import {
   Dto_Response, DtoIn_cashInByOther,
-  DtoIn_currencyRate, DtoIn_landingPage,
+  DtoIn_currencyRate, DtoIn_landingPage, DtoIn_PurseInfo, DtoIn_ShortId,
   DtoOut_currencyRate, DtoOut_FinReq, DtoOut_landingPage, DtoOut_PaymentLink, DtoOut_Response,
 } from "../types"
 
@@ -37,6 +37,18 @@ export const walletApi = {
   },
   cashInByOther: async (data: DtoIn_cashInByOther): Promise<DtoOut_FinReq> => {
     return apiRequest("/cashInByOther", {
+      method: "POST",
+      data,
+    });
+  },
+  editPurse: async (data: DtoIn_PurseInfo): Promise<DtoOut_Response> => {
+    return apiRequest("/editPurse", {
+      method: "POST",
+      data,
+    });
+  },
+  closeList: async (data: DtoIn_ShortId): Promise<DtoOut_Response> => {
+    return apiRequest("/closeList", {
       method: "POST",
       data,
     });
