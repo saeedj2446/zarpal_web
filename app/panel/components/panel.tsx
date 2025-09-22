@@ -131,8 +131,11 @@ export default function PanelForm() {
               </div>
 
               {/* Transactions Table */}
+              <div className="px-4 pb-6 mt-12 text-center">
+                  وضعیت آخرین درخواستها
+              </div>
               <div className="px-4 pb-6">
-                  <TransactionsTable />
+                  <TransactionsTable showAllTBtn={true} showSort={false} showFilter={false}/>
               </div>
           </div>
       </div>

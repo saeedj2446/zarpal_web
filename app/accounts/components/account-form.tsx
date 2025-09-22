@@ -74,7 +74,7 @@ const schema = z.object({
     ),
 
     address: z.string().optional(),
-    iconId: z.string().optional(),
+    IconId: z.string().optional(),
 });
 
 export default function AccountForm({selectedAccount, isNewAccount }) {
@@ -95,7 +95,7 @@ export default function AccountForm({selectedAccount, isNewAccount }) {
         instagram: selectedAccount?.instagram || "",
         telegram: selectedAccount?.telegram || "",
         description: selectedAccount?.description || "",
-        iconId: selectedAccount?.iconId || null,
+        IconId: selectedAccount?.IconId.toString() || null,
     };
 
     const form = useForm({
@@ -111,8 +111,8 @@ export default function AccountForm({selectedAccount, isNewAccount }) {
     const { editPurseMutation } = useWallet();
 
     const onSubmit = (data) => {
-        if(data.iconId){
-            data.iconId=parseInt(data.iconId);
+        if(data.IconId){
+            data.IconId=parseInt(data.IconId);
         }
         if(data.contact){
             data.contact=normalizePhoneNumber(data.contact);
@@ -216,7 +216,7 @@ export default function AccountForm({selectedAccount, isNewAccount }) {
                         <div className="flex flex-wrap gap-6">
                             <FormField
                                 control={form.control}
-                                name="iconId"
+                                name="IconId"
                                 render={({ field, fieldState }) => (
                                     <FormItem className="mt-6">
                                         <FormControl>
@@ -227,7 +227,6 @@ export default function AccountForm({selectedAccount, isNewAccount }) {
                                                 height={120}
                                                 autoUpload
                                                 fileType="image/*"
-                                                value={25}
                                                 onUploadComplete={(val) => {
                                                     field.onChange(val.toString())
                                                 }}

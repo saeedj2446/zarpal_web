@@ -28,8 +28,9 @@ export const setAuthSessionId = (sessionId: string | null) => {
     }
 };
 
-export const getAuthToken = (token: string | null) => {
-    authToken=authToken ||  store.getState().auth.accessToken
+
+export const getAuthToken = (): string | null => {
+    authToken = authToken || store.getState().auth.accessToken;
     return authToken;
 };
 

@@ -16,8 +16,12 @@ export const useFile = () => {
     const getFileMutation = useMutation({
         mutationFn: (fileId: number,version:number) => {
             const clientTime = jMoment().format("YYYY-MM-DD HH:mm:ss");
+
+            if(!version){
+                version="";
+            }
             const str = clientTime +
-                increaseStringSize(fileId, 8," ",false)
+                increaseStringSize(fileId, 12," ",false)
                 +increaseStringSize(version, 5," ",false)
 
             const mac = generateMyMac(str);

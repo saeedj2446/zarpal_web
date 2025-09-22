@@ -129,3 +129,6 @@ export const rial2Toman = (amount?: number | string): string => {
 export function decodeBase64(str:any) {
   return btoa(unescape(encodeURIComponent(str)));
 }
+export function encodeBase64(str) {
+  return decodeURIComponent(escape(atob(str)));
+}

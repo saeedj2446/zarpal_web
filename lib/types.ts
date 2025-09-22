@@ -232,7 +232,7 @@ export interface Dto_Purse {
   city?: string;             // Text(128) (O) → شهرستان
   address?: string;          // Text(256) (O) → بقیه آدرس
   postalCode?: string;       // PostalCode (O) → کد پستی
-  iconId?: number;           // Long (O) → شناسه فایل آیکون
+  IconId?: number;           // Long (O) → شناسه فایل آیکون
 }
 
 
@@ -455,3 +455,76 @@ export interface DtoOut_Response {
 export interface DtoIn_ShortId {
   id: number;    // آیدی لیست
 }
+
+// ====================== Data Types ======================
+
+// ورودی سرویس اول: ست کردن فیلترها
+export interface DtoIn_filterReqi {
+  sessionId: string; // Byte(6)
+  filter: Dto_filterReqi;
+  order?: Dto_ListOrder[];
+}
+
+export interface Dto_filterReqi {
+  reference?: number; // Long
+  purse: string; // PurseId
+  function?: string[]; // List<Text(8)>
+  amountFrom?: number; // Money
+  amountTo?: number; // Money
+  status?: string[]; // List<Char>
+  descLike?: string; // Text(256)
+  createdOnFrom?: string; // Timestamp
+  createdOnTo?: string; // Timestamp
+  payerContactLike?: string; // Text(12)
+  payerTitleLike?: string; // Text(128)
+  expiredOnFrom?: string; // Timestamp
+  expiredOnTo?: string; // Timestamp
+  target?: string; // PurseId
+}
+
+
+export interface Dto_ListOrder {
+  orderBy: string;        // عنوان فیلد مجاز برای مرتب‌سازی (مثل id, amount, status, createdOn و غیره)
+  direction?: "A" | "D";  // جهت مرتب‌سازی: A = صعودی، D = نزولی، پیش‌فرض = A
+}
+
+// خروجی سرویس اول
+export interface DtoOut_ListRequest {
+  response: DtoOut_Response;
+  listId: number;   // Short
+  pageCount: number; // Short
+}
+
+// ورودی سرویس دوم: گرفتن لیست
+export interface DtoIn_ListGet {
+  sessionId: string; // Byte(6)
+  listId: number;    // Short
+  page: number;      // Short
+}
+
+// خروجی سرویس دوم
+export interface DtoOut_listReqi {
+  response: DtoOut_Response;
+  list: Dto_Reqi[];
+}
+
+export interface Dto_Reqi {
+  id: number; // Long
+  purse: string; // PurseId
+  target?: string; // PurseId
+  function: string; // Text(8)
+  amount: number; // Money
+  status: string; // Char
+  desc?: string; // Text(256)
+  createdOn: string; // Timestamp
+  debitFee?: number; // Money
+  creditFee?: number; // Money
+  payerContact?: string; // Cellphone
+  payerTitle?: string; // Text(128)
+  expiredOn?: string; // Timestamp
+  locX?: number; // Float
+  locY?: number; // Float
+}
+
+
+

@@ -4,7 +4,7 @@ import {
   DtoOut_currencyRate, DtoOut_FinReq, DtoOut_landingPage, DtoOut_PaymentLink, DtoOut_Response,
 } from "../types"
 
-import {apiRequest, publicApiRequest} from "@/lib/api/apiRequest"
+import {apiRequest} from "@/lib/api/apiRequest"
 
 export const walletApi = {
   getRate: async (data: DtoIn_currencyRate): Promise<DtoOut_currencyRate> => {
@@ -47,11 +47,6 @@ export const walletApi = {
       data,
     });
   },
-  closeList: async (data: DtoIn_ShortId): Promise<DtoOut_Response> => {
-    return apiRequest("/closeList", {
-      method: "POST",
-      data,
-    });
-  },
+
 
 }

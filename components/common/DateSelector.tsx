@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import DatePicker, { DatePickerProps, DateObject } from "react-multi-date-picker";
+import { X } from "lucide-react";
 
 // calendars & locales
 import persian from "react-date-object/calendars/persian";
@@ -15,15 +16,19 @@ interface DateSelectorProps
     extends Omit<DatePickerProps, "calendar" | "locale" | "value" | "onChange"> {
     lang?: "fa" | "en" | "ar";
     className?: string;
+    placeholder?: string;
     value?: string; // میلادی ISO مثل "2025-09-07"
     onChange?: (val: string | null) => void; // خروجی میلادی ISO
+    clearable?: boolean; // آیا دکمه حذف نمایش داده شود؟
 }
 
 const DateSelector: React.FC<DateSelectorProps> = ({
                                                        lang = "fa",
                                                        className = "",
+                                                       placeholder = "",
                                                        value,
                                                        onChange,
+                                                       clearable = true, // به طور پیش‌فرض دکمه حذف نمایش داده می‌شود
                                                        ...props
                                                    }) => {
     const getCalendarConfig = () => {
@@ -54,7 +59,6 @@ const DateSelector: React.FC<DateSelectorProps> = ({
         });
     };
 
-
     // تابع برای تبدیل DateObject به تاریخ ISO
     const convertToISO = (dateObj: DateObject) => {
         const gregorianDate = dateObj.convert(gregorian);
@@ -69,35 +73,52 @@ const DateSelector: React.FC<DateSelectorProps> = ({
 
         //return date.toISOString(); // خروجی شامل ساعت و دقیقه و ثانیه
         return jMoment(date).format("YYYY-MM-DD HH:mm:ss")
-
     };
 
+    // تابع برای حذف تاریخ
+    const handleClear = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onChange?.(null);
+    };
 
     return (
-        <DatePicker
-            {...props}
-            calendar={calendar}
-            locale={locale}
-            inputClass={`w-full h-12 px-4 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${className}`}
-            containerClassName="w-full"
-            calendarPosition="bottom-right"
-            // نمایش مقدار اولیه با در نظر گرفتن زمان محلی
-            value={
-                value
-                    ? parseISODate(value).convert(calendar)
-                    : null
-            }
-            // خروجی: همیشه میلادی ISO با در نظر گرفتن زمان محلی
-            onChange={(dateObj) => {
-                if (!dateObj) {
-                    onChange?.(null);
-                    return;
+        <div className="relative w-full">
+            <DatePicker
+                {...props}
+                calendar={calendar}
+                locale={locale}
+                placeholder={placeholder}
+                inputClass={`w-full h-12 px-4 pr-10 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${className}`}
+                containerClassName="w-full"
+                calendarPosition="bottom-right"
+                // نمایش مقدار اولیه با در نظر گرفتن زمان محلی
+                value={
+                    value
+                        ? parseISODate(value).convert(calendar)
+                        : null
                 }
+                // خروجی: همیشه میلادی ISO با در نظر گرفتن زمان محلی
+                onChange={(dateObj) => {
+                    if (!dateObj) {
+                        onChange?.(null);
+                        return;
+                    }
 
-                const isoDate = convertToISO(dateObj as DateObject);
-                onChange?.(isoDate);
-            }}
-        />
+                    const isoDate = convertToISO(dateObj as DateObject);
+                    onChange?.(isoDate);
+                }}
+            />
+            {value && clearable && (
+                <button
+                    type="button"
+                    onClick={handleClear}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                >
+                    <X className="w-5 h-5" />
+                </button>
+            )}
+        </div>
     );
 };
 

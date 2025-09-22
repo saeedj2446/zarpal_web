@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from "react";
 import { X, UploadCloud, Loader2 } from "lucide-react"; // Loader2 برای لودینگ
 import { useFile } from "@/lib/hooks/useFile";
 import jMoment from "moment-jalaali";
-import { generateMyMac } from "@/lib/utils/utils";
+import {encodeBase64, generateMyMac} from "@/lib/utils/utils";
 
 export interface FileUploadCardProps {
     width?: number;
@@ -38,9 +38,9 @@ const FileUploader: React.FC<FileUploadCardProps> = ({
         const fetchFromServer = async () => {
             if (value) {
                 try {
-                    const res = await fetchFile(value);
-                    if (res?.file?.content) {
-                        const blobUrl = `data:image/*;base64,${res.file.content}`;
+                    const file = await fetchFile(value);
+                    if (file?.content) {
+                        const blobUrl =  encodeBase64(file.content);
                         setPreview(blobUrl);
                     } else {
                         setPreview(null);
