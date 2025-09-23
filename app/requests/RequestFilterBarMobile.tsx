@@ -32,7 +32,7 @@ const targetOptions: Option[] = [
     { label: "کیف B", value: "2" },
 ];
 
-export default function FilterTransactionOnMobile({
+export default function RequestFilterBarMobile({
                                                       onChange,
                                                   }: {
     onChange: (out: FilterSortOutput) => void;

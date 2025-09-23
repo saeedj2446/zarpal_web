@@ -6,9 +6,10 @@ import { toast } from "@/lib/hooks/use-toast";
 
 export const useReqiList = (
     filter: DtoIn_filterReqi,
-    page? ,
     order?: Dto_ListOrder[],
+    page? ,
 ) => {
+
     const [listId, setListId] = useState<number | null>(null);
 
     // ⏺️ کش محلی برای نگه داشتن listId بر اساس ترکیب filter + order
@@ -17,7 +18,7 @@ export const useReqiList = (
 
     // 🔹 Mutation برای بستن لیست قبلی
     const closeListMutation = useMutation({
-        mutationFn: (data: DtoIn_ShortId & { order?: any; page?: number }) => {
+        mutationFn: (data: DtoIn_ShortId ) => {
             return listApi.closeList(data);
         },
 
@@ -41,7 +42,7 @@ export const useReqiList = (
             }
             const input={};
             if(filter) input.filter=filter;
-            if(order) input.filter=order;
+            if(order) input.order=order;
 
             const res = await listApi.reqiListReq(input);
             console.log("📥 filterQuery result", res);

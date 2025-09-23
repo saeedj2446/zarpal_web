@@ -9,20 +9,20 @@ import { useWallet } from "@/lib/hooks/useWallet";
 import dayjs from "dayjs";
 import { DtoIn_filterReqi, Dto_ListOrder } from "@/lib/types";
 import { useReqiList } from "@/lib/hooks/useReqiList";
-import FilterTransactionOnMobile from "@/app/panel/components/FilterTransactionOnMobile";
 import {useRouter} from "next/navigation";
-import FilterTransactionBarDesktop from "@/app/panel/components/FilterTransactionBarDesktop";
-import SortBarDesktop from "@/app/panel/components/SortBarDesktop";
+import RequestSortBar from "@/app/requests/RequestSortBar";
+import RequestFilterBarMobile from "@/app/requests/RequestFilterBarMobile";
+import RequestFilterBarDesktop from "@/app/requests/RequestFilterBarDesktop";
 
 
 
-interface TransactionsTableProps {
+interface RequestProps {
   showAllTBtn?: boolean; // پراپس بولین، اختیاری
   showSort?: boolean;
   showFilter?: boolean;
 }
-export default function TransactionsTable({ showAllTBtn = false,showSort=true,showFilter=true }: TransactionsTableProps) {
-  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+export default function Requests({ showAllTBtn = false,showSort=true,showFilter=true }: RequestProps) {
+  const [selectedRequest, setSelectedRequest] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("ALL"); // تب فعال
   const { currentWallet } = useWallet();
   const [filter, setFilter] = useState<DtoIn_filterReqi | null>({ purse: currentWallet.id});
@@ -31,8 +31,8 @@ export default function TransactionsTable({ showAllTBtn = false,showSort=true,sh
   const router = useRouter();
 
   // 🔹 استفاده از هوک کاستوم که خودش سرویس اول و دوم را مدیریت می‌کند
-  const { data, isLoading, isError } = useReqiList(filter!,page, null);
-  const transactions = data?.list ?? [];
+  const { data, isLoading, isError } = useReqiList(filter,order,page, );
+  const requests = data?.list ?? [];
 
   // 🔹 توابع کمکی برای رنگ و متن وضعیت
   const getStatusColor = (status: string) => {
@@ -56,14 +56,14 @@ export default function TransactionsTable({ showAllTBtn = false,showSort=true,sh
   };
 
   // 🔹 نمایش جزئیات تراکنش انتخاب شده
-  if (selectedTransaction) {
+  if (selectedRequest) {
     return (
-        <Card className="bg-white shadow-lg max-w-2xl">
+        <Card className="bg-white shadow-lg max-w-2xl ">
           <CardHeader className="pb-4 flex items-center justify-between">
             <CardTitle className="text-lg">جزئیات تراکنش</CardTitle>
             <Button
                 variant="ghost"
-                onClick={() => setSelectedTransaction(null)}
+                onClick={() => setSelectedRequest(null)}
                 className="text-gray-500"
             >
               بازگشت
@@ -73,42 +73,42 @@ export default function TransactionsTable({ showAllTBtn = false,showSort=true,sh
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm text-gray-600">شناسه تراکنش</label>
-                <p className="font-medium">{selectedTransaction.id}</p>
+                <p className="font-medium">{selectedRequest.id}</p>
               </div>
               <div>
                 <label className="text-sm text-gray-600">مبلغ</label>
-                <p className="font-medium text-lg">{selectedTransaction.amount} ریال</p>
+                <p className="font-medium text-lg">{selectedRequest.amount} ریال</p>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm text-gray-600">نام پرداخت کننده</label>
-                <p className="font-medium">{selectedTransaction.payerTitle}</p>
+                <p className="font-medium">{selectedRequest.payerTitle}</p>
               </div>
               <div>
                 <label className="text-sm text-gray-600">شماره تماس</label>
-                <p className="font-medium">{selectedTransaction.payerContact}</p>
+                <p className="font-medium">{selectedRequest.payerContact}</p>
               </div>
             </div>
 
             <div>
               <label className="text-sm text-gray-600">توضیحات</label>
-              <p className="font-medium">{selectedTransaction.desc}</p>
+              <p className="font-medium">{selectedRequest.desc}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm text-gray-600">تاریخ ثبت</label>
                 <p className="font-medium">
-                  {dayjs(selectedTransaction.createdOn).format("YYYY/MM/DD HH:mm")}
+                  {dayjs(selectedRequest.createdOn).format("YYYY/MM/DD HH:mm")}
                 </p>
               </div>
               <div>
                 <label className="text-sm text-gray-600">تاریخ انقضا</label>
                 <p className="font-medium">
-                  {selectedTransaction.expiredOn
-                      ? dayjs(selectedTransaction.expiredOn).format("YYYY/MM/DD HH:mm")
+                  {selectedRequest.expiredOn
+                      ? dayjs(selectedRequest.expiredOn).format("YYYY/MM/DD HH:mm")
                       : "-"}
                 </p>
               </div>
@@ -116,8 +116,8 @@ export default function TransactionsTable({ showAllTBtn = false,showSort=true,sh
 
             <div>
               <label className="text-sm text-gray-600">وضعیت</label>
-              <Badge className={`${getStatusColor(selectedTransaction.status)} mt-1`}>
-                {getStatusText(selectedTransaction.status)}
+              <Badge className={`${getStatusColor(selectedRequest.status)} mt-1`}>
+                {getStatusText(selectedRequest.status)}
               </Badge>
             </div>
           </CardContent>
@@ -130,7 +130,7 @@ export default function TransactionsTable({ showAllTBtn = false,showSort=true,sh
       <div className="flex flex-col md:flex-row gap-4 max-w-4xl">
         {/* 🔹 فیلتر دسکتاپ */}
         {showFilter &&(
-            <FilterTransactionBarDesktop
+            <RequestFilterBarDesktop
                 onChange={({filter: newFilter, order: newOrder}) => {
                   setFilter({
                     ...newFilter,
@@ -146,7 +146,7 @@ export default function TransactionsTable({ showAllTBtn = false,showSort=true,sh
         {/* 🔹 فقط موبایل */}
         {showFilter && (
             <div className="md:hidden">
-              <FilterTransactionOnMobile
+              <RequestFilterBarMobile
                   onChange={({filter: newFilter, order: newOrder}) => {
                     setFilter({
                       ...newFilter,
@@ -164,11 +164,15 @@ export default function TransactionsTable({ showAllTBtn = false,showSort=true,sh
         <Card className="flex-1 bg-white shadow-lg">
           <CardContent>
             {showSort && (
-                <SortBarDesktop
-                    onChange={(newOrder) => setOrder(newOrder.length ? newOrder : [{
-                      orderBy: "createdOn",
-                      direction: "D"
-                    }])}
+                <RequestSortBar
+                    onChange={(newOrder) => {
+                      let nOrder=newOrder.length ? newOrder : [{
+                        orderBy: "createdOn",
+                        direction: "D"
+                      }]
+
+                      setOrder(nOrder)
+                    }}
                 />
             )}
 
@@ -177,26 +181,26 @@ export default function TransactionsTable({ showAllTBtn = false,showSort=true,sh
             {isError && <p className="text-center text-red-500">خطا در بارگذاری تراکنش‌ها</p>}
 
             <div className="space-y-3">
-              {transactions.map((transaction: any) => (
+              {requests.map((request: any) => (
                   <div
-                      key={transaction.id}
-                      onClick={() => setSelectedTransaction(transaction)}
+                      key={request.id}
+                      onClick={() => setSelectedRequest(request)}
                       className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-3">
                         <User className="w-4 h-4 text-gray-500"/>
-                        <span className="font-medium">{transaction.payerTitle}</span>
+                        <span className="font-medium">{request.payerTitle}</span>
                       </div>
-                      <Badge className={getStatusColor(transaction.status)}>
-                        {getStatusText(transaction.status)}
+                      <Badge className={getStatusColor(request.status)}>
+                        {getStatusText(request.status)}
                       </Badge>
                     </div>
 
                     <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
-                      <span>{transaction.desc}</span>
+                      <span>{request.desc}</span>
                       <span className="font-medium text-lg text-[#a85a7a]">
-                  {transaction.amount} ریال
+                  {request.amount} ریال
                 </span>
                     </div>
 
@@ -204,13 +208,13 @@ export default function TransactionsTable({ showAllTBtn = false,showSort=true,sh
                       <div className="flex items-center gap-1">
                         <Calendar className="w-3 h-3"/>
                         <span>
-                    {dayjs(transaction.createdOn).format("YYYY/MM/DD HH:mm")} -{" "}
-                          {transaction.expiredOn
-                              ? dayjs(transaction.expiredOn).format("YYYY/MM/DD HH:mm")
+                    {dayjs(request.createdOn).format("YYYY/MM/DD HH:mm")} -{" "}
+                          {request.expiredOn
+                              ? dayjs(request.expiredOn).format("YYYY/MM/DD HH:mm")
                               : "-"}
                   </span>
                       </div>
-                      <span>{transaction.id}</span>
+                      <span>{request.id}</span>
                     </div>
                   </div>
               ))}
@@ -220,7 +224,7 @@ export default function TransactionsTable({ showAllTBtn = false,showSort=true,sh
                 <div className="mt-4 text-center">
                   <Button
                       variant="outline"
-                      onClick={() => router.push("/transaction")}
+                      onClick={() => router.push("/requests")}
                       className="text-[#a85a7a] border-[#a85a7a]"
                   >
                     مشاهده همه درخواستها

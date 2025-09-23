@@ -6,6 +6,7 @@ import Num2persian from "@/lib/utils/Num2persian";
 import jMoment from "moment-jalaali";
 import {DateObject} from "react-multi-date-picker";
 import gregorian from "react-date-object/calendars/gregorian";
+import {IranProvinces} from "@/lib/local-data/Iran-provice";
 
 export function formatNumber(val: string | number | null | undefined): string {
   if (val === null || val === undefined) return "";
@@ -132,3 +133,59 @@ export function decodeBase64(str:any) {
 export function encodeBase64(str) {
   return decodeURIComponent(escape(atob(str)));
 }
+
+// lib/utils/utils.js
+
+export const getLocationTitles = (provinceId, cityId) => {
+  // اگر هر دو شناسه نال یا اندیفاین بودند
+  if (!provinceId && !cityId) {
+    return { province: '', city: '' };
+  }
+  if (!provinceId && cityId) {
+    return { province: '', city: '' };
+  }
+
+  // تابع کمکی برای تطابق شناسه‌ها
+  const normalizeId = (id) => {
+    if (!id) return "";
+    const strId = String(id).trim();
+    // اضافه کردن صفر ابتدایی برای شناسه‌های عددی
+    return strId.length === 1 ? `0${strId}` : strId;
+  };
+
+  const pId = normalizeId(provinceId);
+  const cId = normalizeId(cityId);
+
+  // اگر استان وجود نداشت
+  if (!pId) {
+    return { province: '', city: '' };
+  }
+
+  // جستجوی استان
+  const province = IranProvinces.find(p =>
+      p.id === pId || p.id === provinceId
+  );
+
+  // اگر استان یافت نشد
+  if (!province) {
+    return { province: '', city: '' };
+  }
+
+  // اگر شهر وجود نداشت
+  if (!cId) {
+    return { province: province.label, city: '' };
+  }
+
+  // جستجوی شهر
+  const city = province.children.find(c =>
+      c.id === cId || c.id === cityId
+  );
+
+  // اگر شهر یافت شد
+  if (city) {
+    return { province: province.label, city: city.label };
+  }
+
+  // اگر استان وجود داشت ولی شهر یافت نشد
+  return { province: province.label, city: '' };
+};

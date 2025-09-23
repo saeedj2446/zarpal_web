@@ -4,7 +4,7 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import { AppProviders } from "../components/providers/app-providers";
-import AuthGuard from "@/app/panel/components/AuthGuard";
+import AuthGuard from "@/app/public/AuthGuard";
 
 export const metadata: Metadata = {
     title: "زرپال",

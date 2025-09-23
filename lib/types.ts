@@ -1,5 +1,21 @@
 // Core TypeScript interfaces for the application
+type Currency_Option = {
+  value: string;
+  label: string;
+};
+export const CurrencyOption: Currency_Option[] = [
+  { value: "IRR", label: "ریال ایران" },
+  { value: "egld4Tst", label: "طلا-تست" },
+  { value: "gldZrl", label: "طلای داخلی زریال" },
+  { value: "egldZrl", label: "طلای خارجی زریال" },
+];
 
+export const CurrencyOptionMap = {
+  IRR: "ریال ایران",
+  egld4Tst: "طلا – خارجی – محیط تست",
+  gldZrl: "طلا – داخلی – زریال",
+  egldZrl: "طلا – خارجی - زریال",
+} as const;
 // types/currency.ts
 
 // 👇 تایپ اصلی
@@ -229,10 +245,12 @@ export interface Dto_Purse {
   fax?: string;              // Text(16) (O) → فکس
   email?: string;            // Text(64) (O) → ایمیل
   provinceId?: number;       // Short (O) → کد استان
+  guildId?: number;          //Short (O) → کد صنف
+  licenceId?: number;          //Short (O) → کد مجوز
   city?: string;             // Text(128) (O) → شهرستان
   address?: string;          // Text(256) (O) → بقیه آدرس
   postalCode?: string;       // PostalCode (O) → کد پستی
-  IconId?: number;           // Long (O) → شناسه فایل آیکون
+  iconId?: number;           // Long (O) → شناسه فایل آیکون
 }
 
 

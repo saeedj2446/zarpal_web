@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-import { X, UploadCloud, Loader2 } from "lucide-react"; // Loader2 برای لودینگ
+import { X, UploadCloud, Loader2, CheckCircle } from "lucide-react";
 import { useFile } from "@/lib/hooks/useFile";
 import jMoment from "moment-jalaali";
 import {encodeBase64, generateMyMac} from "@/lib/utils/utils";
@@ -12,8 +12,8 @@ export interface FileUploadCardProps {
     label?: string;
     autoUpload?: boolean;
     onUploadComplete?: (fileId: number) => void;
-    onChange?: (file: string) => void;
-    value?: number | null; // 🔹 الان آیدی فایل میاد
+    onFileSelect?: (file: string) => void;
+    value?: number | null;
     name?: string;
 }
 
@@ -24,14 +24,14 @@ const FileUploader: React.FC<FileUploadCardProps> = ({
                                                          fileType = "image/*",
                                                          autoUpload = true,
                                                          onUploadComplete,
-                                                         onChange,
+                                                         onFileSelect,
                                                          label = "انتخاب فایل",
                                                          value,
                                                          name,
                                                      }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [preview, setPreview] = useState<string | null>(null);
-    const { uploadFile, uploadProgress, uploading, fetchFile, isFetchingFile } = useFile();
+    const { uploadFile, uploadProgress, isUploadingFile, fetchFile, isFetchingFile } = useFile();
 
     // ---- وقتی value آیدی فایل بود، فایل رو از سرور بیاریم ----
     useEffect(() => {
@@ -40,22 +40,19 @@ const FileUploader: React.FC<FileUploadCardProps> = ({
                 try {
                     const file = await fetchFile(value);
                     if (file?.content) {
-                        const blobUrl =  encodeBase64(file.content);
+                        const blobUrl = encodeBase64(file.content);
                         setPreview(blobUrl);
-                    } else {
-                        setPreview(null);
                     }
                 } catch (err) {
                     console.error("❌ Error fetching file:", err);
-                    setPreview(null);
                 }
-            } else {
-                setPreview(null);
+            }else{
+                setPreview(null)
             }
         };
 
         fetchFromServer();
-    }, [value]);
+    }, [value, fetchFile]);
 
     // ---- انتخاب فایل از سیستم ----
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,12 +63,12 @@ const FileUploader: React.FC<FileUploadCardProps> = ({
         reader.onloadend = async () => {
             const result = reader.result as string;
             setPreview(result);
-            if (onChange) onChange(result);
+            if (onFileSelect) onFileSelect(result);
 
             if (autoUpload) {
                 try {
                     const res = await uploadFile({
-                        type: file.type.split("/")[1] || "image",
+                        fileType: file.type.split("/")[1] || "image",
                         name: file.name,
                         result,
                     });
@@ -103,9 +100,39 @@ const FileUploader: React.FC<FileUploadCardProps> = ({
 
             {/* لودینگ در حالت دانلود از سرور */}
             {isFetchingFile ? (
-                <Loader2 className="animate-spin text-gray-400 w-6 h-6" />
+                <div className="flex flex-col items-center justify-center w-full h-full bg-black bg-opacity-30 rounded-xl">
+                    <Loader2 className="animate-spin text-white w-8 h-8" />
+                    <span className="text-xs mt-2 text-white">در حال دانلود...</span>
+                </div>
             ) : preview ? (
-                <img src={preview} alt="Preview" className="w-full h-full rounded-xl object-cover" />
+                <>
+                    <img src={preview} alt="Preview" className="w-full h-full rounded-xl object-cover" />
+
+                    {/* پروگرس‌بار آپلود */}
+                    {isUploadingFile && autoUpload && (
+                        <div className="absolute inset-0 bg-black bg-opacity-70 flex flex-col items-center justify-center rounded-xl">
+                            <div className="w-4/5 h-3 bg-gray-700 rounded-full overflow-hidden mb-3">
+                                <div
+                                    className="h-full bg-gradient-to-r from-blue-400 to-purple-500 transition-all duration-300 ease-out rounded-full"
+                                    style={{ width: `${uploadProgress}%` }}
+                                />
+                            </div>
+                            <span className="text-white text-sm font-medium mb-3">
+                                {uploadProgress}%
+                            </span>
+                            <div className="flex items-center justify-center">
+                                <Loader2 className="animate-spin text-white w-6 h-6" />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* نمایش آیکون موفقیت پس از آپلود کامل */}
+                    {!isUploadingFile && value && (
+                        <div className="absolute top-2 left-2 bg-green-500 rounded-full p-1 shadow-lg">
+                            <CheckCircle size={18} className="text-white" />
+                        </div>
+                    )}
+                </>
             ) : (
                 <div className="flex flex-col items-center justify-center text-gray-400">
                     <UploadCloud size={32} />
@@ -113,26 +140,16 @@ const FileUploader: React.FC<FileUploadCardProps> = ({
                 </div>
             )}
 
-            {/* پروگرس‌بار آپلود */}
-            {uploading && autoUpload && (
-                <div className="absolute bottom-0 left-0 w-full h-2 bg-gray-200 rounded-b-xl overflow-hidden">
-                    <div
-                        className="h-full bg-blue-500 transition-all duration-200"
-                        style={{ width: `${uploadProgress}%` }}
-                    />
-                </div>
-            )}
-
             {/* دکمه حذف */}
-            {preview && !uploading && (
+            {preview && !isUploadingFile && (
                 <button
                     type="button"
-                    className="absolute top-2 right-2 bg-white rounded-full p-1 shadow hover:bg-gray-100"
+                    className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md hover:bg-gray-100 transition-colors"
                     onClick={(e) => {
                         e.stopPropagation();
                         setPreview(null);
                         if (onUploadComplete) onUploadComplete(0);
-                        if (onChange) onChange("");
+                        if (fileInputRef.current) fileInputRef.current.value = "";
                     }}
                 >
                     <X size={16} />

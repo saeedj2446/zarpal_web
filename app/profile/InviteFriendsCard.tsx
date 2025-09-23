@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Card, CardContent } from "@/components/radix/card";
-import { Button } from "@/components/radix//button";
+import { Button } from "@/components/radix/button";
 import {useAuth} from "@/lib/hooks/useAuth";
 
 interface InviteFriendsCardProps {
@@ -27,7 +27,7 @@ export default function InviteFriendsCard({ inviteCode }: InviteFriendsCardProps
     };
 
     return (
-        <Card className="bg-white shadow-md">
+        <Card className="bg-white shadow-md ">
             <CardContent className="p-5">
                 <h2 className="text-lg font-medium text-center mb-4">دعوت از دوستان</h2>
 
@@ -72,7 +72,7 @@ export default function InviteFriendsCard({ inviteCode }: InviteFriendsCardProps
                     onClick={handleInvite}
                     className="w-full bg-pink-600 hover:bg-pink-700 text-white py-3 rounded-lg"
                 >
-                    دعوت از دوستان
+                   ارسال لینک دعوت
                 </Button>
             </CardContent>
         </Card>

@@ -3,15 +3,9 @@ import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/radix/avatar";
 import { Card, CardContent } from "@/components/radix/card";
 import { Button } from "@/components/radix/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@radix-ui/react-dropdown-menu";
 import { Eye, Receipt, CreditCard, List, FileText } from "lucide-react";
 import Link from "next/link";
-import TransactionsTable from "./transactions-table";
+import Request from "../requests/requests";
 import { Timer } from "@/components/common";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -19,11 +13,11 @@ import { useDispatch } from "react-redux";
 import { persistor } from "@/lib/store/store";
 import {useAuth} from "@/lib/hooks/useAuth";
 import {useWallet} from "@/lib/hooks/useWallet";
-import UserWalletList from "@/app/panel/components/user-wallet-list";
+import UserWalletList from "@/app/public/user-wallet-list";
 import {diffDate} from "@/lib/utils/utils";
 import {setCurrentWallet} from "@/lib/store/slices/walletSlice";
 import jMoment from "moment-jalaali";
-import GoldRateBoard from "@/app/panel/components/gold-rate-board";
+import GoldRateBoard from "@/app/public/gold-rate-board";
 import {useEffect} from "react";
 
 export default function PanelForm() {
@@ -37,7 +31,7 @@ export default function PanelForm() {
     }
   },[])
 
-  const { fisrtName, lastName, fathersName, gender, nationality, natId, contact, birthDate,purseList } = profile;
+  const { fisrtName, lastName,  } = profile;
   const { currentWallet} = useWallet();
   const handleLogout = async () => {
     logout();
@@ -61,7 +55,7 @@ export default function PanelForm() {
       {
         title: "واریز مستقیم",
         icon: <List className="w-12 h-12 md:w-16 md:h-16" />,
-        href: "/transactions",
+        href: "/requests",
         color: "bg-purple-500 hover:bg-purple-600",
       },
       {
@@ -99,7 +93,7 @@ export default function PanelForm() {
                   {currentWallet && (
                       <Timer
                           totalTime={diffDate(currentWallet.active.usageStart, currentWallet.active.usageEnd)}
-                          fillColor={"white"}
+                          color={"white"}
                           textColor={"white"}
                           currentTime={diffDate(jMoment().format("YYYY-MM-DD HH:mm:ss"), currentWallet.active.usageEnd)}
                           size={50}
@@ -130,12 +124,12 @@ export default function PanelForm() {
                   ))}
               </div>
 
-              {/* Transactions Table */}
+              {/* Requests Table */}
               <div className="px-4 pb-6 mt-12 text-center">
                   وضعیت آخرین درخواستها
               </div>
               <div className="px-4 pb-6">
-                  <TransactionsTable showAllTBtn={true} showSort={false} showFilter={false}/>
+                  <Request showAllTBtn={true} showSort={false} showFilter={false}/>
               </div>
           </div>
       </div>

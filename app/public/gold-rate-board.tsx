@@ -78,7 +78,7 @@ export default function GoldRateBoard() {
                     <Timer
                         totalTime={totalTime}
                         currentTime={currentTime}
-                        fillColor="#F59E0B"
+                        color="#F59E0B"
                         textColor="white"
                         size={50}
                     />

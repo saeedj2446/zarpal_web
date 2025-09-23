@@ -3,7 +3,7 @@ interface OtpTimerProps {
     currentTime: number;     // مقدار فعلی ثانیه
     size?: number;
     emptyColor?: string;     // رنگ دایره خالی
-    fillColor?: string;      // رنگ دور دایره (بیرونی)
+    color?: string;      // رنگ دور دایره (بیرونی)
     textColor?: string;      // رنگ متن وسط (اختیاری، اگر نخوای خودش کانتینر میگیره)
 }
 
@@ -12,7 +12,7 @@ export default function Timer({
                                   currentTime,
                                   size = 100,
                                   emptyColor = "rgba(245, 245, 245, 0.3)",
-                                  fillColor = "#F59E0B",
+                                  color = "#F59E0B",
                                   textColor= "#3a3836",
                               }: OtpTimerProps) {
     if (currentTime <= 0) return null;
@@ -43,7 +43,7 @@ export default function Timer({
 
                 {/* دایره پر شده */}
                 <circle
-                    stroke={fillColor}
+                    stroke={color}
                     fill="transparent"
                     strokeWidth={stroke}
                     strokeDasharray={`${circumference} ${circumference}`}

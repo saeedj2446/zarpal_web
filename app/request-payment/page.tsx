@@ -4,8 +4,8 @@ import React, {useEffect, useState} from "react";
 import { CreditCard, ArrowLeft, Phone } from "lucide-react";
 import Link from "next/link";
 import { useWallet } from "@/lib/hooks/useWallet";
-import UserWalletList from "@/app/panel/components/user-wallet-list";
-import GoldRateBoard from "@/app/panel/components/gold-rate-board";
+import UserWalletList from "@/app/public/user-wallet-list";
+import GoldRateBoard from "@/app/public/gold-rate-board";
 
 // Radix
 import { Card, CardContent } from "@/components/radix/card";

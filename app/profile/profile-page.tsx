@@ -18,7 +18,7 @@ import {
 import Link from "next/link";
 import { useAuth } from "@/lib/hooks/useAuth";
 import jMoment from "moment-jalaali";
-import InviteFriendsCard from "@/app/profile/components/InviteFriendsCard";
+import InviteFriendsCard from "@/app/profile/InviteFriendsCard";
 import {useRouter} from "next/navigation";
 
 export default function ProfileComponent() {
@@ -73,8 +73,8 @@ export default function ProfileComponent() {
       <div className="min-h-screen bg-gray-100 ">
         {/* Header */}
         <div className="bg-[#a85a7a] text-white p-4 flex items-center justify-between">
-          <Link href="/" className="text-white">
-            <ArrowRight className="w-6 h-6" />
+          <Link href="/app/public" className="text-white">
+            <ArrowRight className="w-6 h-6"/>
           </Link>
           <span className="text-lg font-medium">پروفایل کاربری</span>
           <div className="w-6 h-6"></div>
@@ -143,10 +143,11 @@ export default function ProfileComponent() {
           </div>
 
 
+        </div>
+        <div className="max-w-[1000px] mx-auto p-4">
+          <InviteFriendsCard/>
+        </div>
 
         </div>
-        <InviteFriendsCard/>
-
-      </div>
-  );
-}
+        );
+        }

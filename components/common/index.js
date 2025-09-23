@@ -17,6 +17,10 @@ import Timer from "./Timer";
 import {FloatingLabel} from "./FloatingLabel";
 import {NumberInput} from "./NumberInput";
 import FileUploader from "./FileUploader";
+import DropSelector from "./DropSelector";
+import {ImagePreview} from "./ImagePreview";
+import {VideoPreview} from "./VideoPreview";
+import {FilePreview} from "./FilePreview";
 
 export {
     XView,
@@ -37,6 +41,9 @@ export {
     Timer,
     FloatingLabel,
     NumberInput,
-    FileUploader
-
+    FileUploader,
+    DropSelector,
+    ImagePreview,
+    VideoPreview,
+    FilePreview,
 };

@@ -30,7 +30,7 @@ const targetOptions: Option[] = [
     { label: "کیف B", value: "2" },
 ];
 
-export default function FilterTransactionBarDesktop({ onChange }: { onChange: (out: FilterSortOutput) => void }) {
+export default function RequestFilterBarDesktop({ onChange }: { onChange: (out: FilterSortOutput) => void }) {
     const [filter, setFilter] = useState<Dto_filterReqi>({});
 
     const toggleFilter = (key: keyof Dto_filterReqi, value: string) => {

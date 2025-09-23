@@ -2,14 +2,14 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import {DtoIn_filterReqi} from "@/lib/types";
 
 
-interface TransactionListState {
+interface RequestListState {
     listId?: number;
     pageCount?: number;
     filters?: DtoIn_filterReqi;
     currentPage: number;
 }
 
-const initialState: TransactionListState = {
+const initialState: RequestListState = {
     listId: undefined,
     pageCount: undefined,
     filters: undefined,
@@ -17,7 +17,7 @@ const initialState: TransactionListState = {
 };
 
 const listSlice = createSlice({
-    name: "transactionList",
+    name: "requestList",
     initialState,
     reducers: {
         setListMeta: (

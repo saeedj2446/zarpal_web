@@ -1,6 +1,6 @@
 "use client";
 
-import { LoginForm } from "@/app/login/components/login-form";
+import { LoginForm } from "@/app/login/login-form";
 import {ForgetPasswordForm} from "@/app/forgot-password/forget-password-form";
 
 export default function LoginPage() {

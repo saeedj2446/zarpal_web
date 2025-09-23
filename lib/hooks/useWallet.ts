@@ -55,10 +55,9 @@ export const useWallet = () => {
       if (updatedPurse) {
         setCurrentWalletValue(updatedPurse);
       }
+      toast({description:"تغییرات با موفقیت ذخیره شد.",});
     },
   });
-
-
 
 
   const cashInByOtherMutation = useMutation({

@@ -66,10 +66,10 @@ function useArrayReorder<T>(items: T[], setItems: (items: T[]) => void) {
     };
 }
 
-export default function SortBarDesktop({
-                                           onSortChange,
+export default function RequestSortBar({
+                                           onChange,
                                        }: {
-    onSortChange: (value: SortItem[]) => void;
+    onChange: (value: SortItem[]) => void;
 }) {
     const [activeSorts, setActiveSorts] = useState<SortItem[]>([]);
 
@@ -78,7 +78,7 @@ export default function SortBarDesktop({
         activeSorts,
         (newSorts) => {
             setActiveSorts(newSorts);
-            onSortChange(newSorts);
+            onChange(newSorts);
         }
     );
 
@@ -95,7 +95,7 @@ export default function SortBarDesktop({
 
         const newSorts = [...activeSorts, { orderBy: option.value, direction: dir }];
         setActiveSorts(newSorts);
-        onSortChange(newSorts);
+        onChange(newSorts);
     };
 
     const handleClear = (option: SortOption, direction?: "A" | "D") => {
@@ -104,7 +104,7 @@ export default function SortBarDesktop({
             (s) => !(s.orderBy === option.value && s.direction === dir)
         );
         setActiveSorts(newSorts);
-        onSortChange(newSorts);
+        onChange(newSorts);
     };
 
     // دریافت لیبل برای نمایش

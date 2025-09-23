@@ -1,15 +1,15 @@
 "use client";
 import React from "react";
 import { useRouter } from "next/navigation";
-import TransactionsTable from "@/app/panel/components/transactions-table";
+import Request from "@/app/requests/requests";
 import {ArrowLeft, CreditCard} from "lucide-react";
 import Link from "next/link";
 
 
-export default function Transactionpage() {
+export default function Requestpage() {
   const router = useRouter();
   return (
-      <div className="bg-gray-100 font-['iransans-number'] max-w-2xl">
+      <div className="flex flex-col bg-gray-100 font-['iransans-number'] ">
           <div className="bg-[#a85a7a] text-white p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                   <CreditCard className="w-8 h-8"/>
@@ -22,7 +22,7 @@ export default function Transactionpage() {
               </Link>
           </div>
           <div className="flex flex-col  px-4 py-6 ">
-              <TransactionsTable/>
+              <Request/>
           </div>
 
       </div>
