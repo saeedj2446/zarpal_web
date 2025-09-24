@@ -87,7 +87,7 @@ export default function PanelForm() {
                       <AvatarImage src="/placeholder-user.jpg"/>
                       <AvatarFallback>ا</AvatarFallback>
                   </Avatar>
-                  <span className="text-lg">{(fisrtName + " " + lastName)}</span>
+                  <span className="text-lg">{((fisrtName || "")  + " " + (lastName || ""))}</span>
               </Link>
               <div className="justify-center">
                   {currentWallet && (
@@ -124,12 +124,16 @@ export default function PanelForm() {
                   ))}
               </div>
 
-              {/* Requests Table */}
-              <div className="px-4 pb-6 mt-12 text-center">
-                  وضعیت آخرین درخواستها
-              </div>
+
+
               <div className="px-4 pb-6">
-                  <Request showAllTBtn={true} showSort={false} showFilter={false}/>
+                  <Request
+                      showAllTBtn={true}
+                      title={' آخرین درخواستها'}
+                      showSort={false}
+                      showFilter={false}
+                      maxPages={2}
+                  />
               </div>
           </div>
       </div>

@@ -1,4 +1,5 @@
 // components/accounts/AccountForm.jsx
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -8,81 +9,97 @@ import { useWallet } from "@/lib/hooks/useWallet";
 import { getLocationTitles } from "@/lib/utils/utils";
 import { CurrencyOptionMap } from "@/lib/types";
 
-const AccountForm = ({ selectedAccount, isNewAccount, onCancelNewAccount }) => {
-    const [isEditing, setIsEditing] = useState(false);
+interface AccountFormProps {
+    selectedAccount: any;
+    isNewAccount: boolean;
+    onCancelNewAccount: () => void;
+    onAccountCreated?: (accountId: string) => void;
+}
+
+const AccountForm = ({
+                         selectedAccount,
+                         isNewAccount,
+                         onCancelNewAccount,
+                         onAccountCreated
+                     }: AccountFormProps) => {
+    const [editingMode, setEditingMode] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
     const [accountWithLabels, setAccountWithLabels] = useState(null);
-    const { editPurseMutation } = useWallet();
+    const [isLoading, setIsLoading] = useState(false);
+    // استفاده مستقیم از هوک useWallet برای دسترسی به وضعیت‌ها
+    const {
+        editPurseMutation,
+        addPurseMutation,
+        setCurrentWalletValue,
+        isAddingPurse  // استفاده مستقیم از وضعیت isLoading
+    } = useWallet();
 
-    // برای جلوگیری از خطای Hydration، مطمئن می‌شویم که state اولیه فقط در سمت کلایت تنظیم شود
     useEffect(() => {
         setIsMounted(true);
-        // اگر حساب جدید است، مستقیماً به حالت ویرایش برو
         if (isNewAccount) {
-            setIsEditing(true);
+            setEditingMode(true);
         }
     }, [isNewAccount]);
 
     useEffect(() => {
         if (isMounted && selectedAccount) {
-            // ایجاد یک کپی از selectedAccount برای افزودن ویژگی‌های جدید
             let updatedAccount = { ...selectedAccount };
 
-            // افزودن برچسب‌های محل
             const loc = getLocationTitles(selectedAccount.provinceId, selectedAccount.city) || {};
             updatedAccount.provinceLabel = loc?.province;
             updatedAccount.cityLabel = loc?.city;
             updatedAccount.currencyLabel = CurrencyOptionMap[selectedAccount.currency];
-
-            // حذف بخش افزودن داده‌های نمونه چون حالا در اسلایدر اضافه شده‌اند
 
             setAccountWithLabels(updatedAccount);
         } else if (isMounted) {
             setAccountWithLabels(null);
         }
     }, [isMounted, selectedAccount]);
-    // افزودن برچسب‌های محلی به حساب
-    useEffect(() => {
-        if (selectedAccount) {
-            const loc = getLocationTitles(selectedAccount.provinceId, selectedAccount.city) || {};
-            selectedAccount.provinceLabel = loc?.province;
-            selectedAccount.cityLabel = loc?.city;
-            selectedAccount.currencyLabel = CurrencyOptionMap[selectedAccount.currency];
-        }
-    }, [selectedAccount]);
 
     const handleEdit = () => {
-        setIsEditing(true);
+        setEditingMode(true);
     };
 
     const handleCancel = () => {
-        setIsEditing(false);
-        // اگر در حال ایجاد حساب جدید هستیم، باید به حساب قبلی برگردیم
+        setEditingMode(false);
         if (isNewAccount) {
             onCancelNewAccount();
         }
     };
 
-    const handleSave = (data) => {
+    const handleSave = async(data) => {
         if (isNewAccount) {
-            // منطق ایجاد حساب جدید
-            console.log("Create account:", data);
+            const res = await addPurseMutation.mutateAsync({
+                purse: {
+                    ...data,
+                    type: "IRI", // نوع پیش‌فرض کیف
+                    createdOn: new Date().toISOString(),
+                    status: "O", // وضعیت فعال
+                    level: {
+                        id: 1,
+                        title: "سطح پایه",
+                        limitList: [],
+                        feeList: []
+                    }
+                }
+            });
+            setEditingMode(false);
         } else {
-            // ویرایش حساب موجود
-            editPurseMutation.mutate({
+            const res = await editPurseMutation.mutate({
                 purse: {
                     id: selectedAccount.id,
                     ...data,
                 },
             });
-        }
 
-        setIsEditing(false);
+            // برای ویرایش، می‌توانیم بلافاصله از حالت ویرایش خارج شویم
+            // چون ویرایش معمولاً سریع است و نیاز به انتقال صفحه ندارد
+            setEditingMode(false);
+        }
     };
 
     const handlePackagePurchase = (packageId) => {
         console.log("Purchasing package:", packageId);
-        // در اینجا می‌توانید منطق خرید بسته را پیاده‌سازی کنید
     };
 
     // اگر کامپوننت هنوز mount نشده، چیزی نمایش نده
@@ -99,7 +116,7 @@ const AccountForm = ({ selectedAccount, isNewAccount, onCancelNewAccount }) => {
     }
 
     // حالت نمایش اطلاعات (حالت پیش‌فرض)
-    if (!isEditing) {
+    if (!editingMode) {
         return (
             <AccountView
                 account={selectedAccount}
@@ -109,13 +126,14 @@ const AccountForm = ({ selectedAccount, isNewAccount, onCancelNewAccount }) => {
         );
     }
 
-    // حالت ویرایش
+    // حالت ویرایش/ایجاد - استفاده از وضعیت‌های React Query
     return (
         <AccountEdit
             account={selectedAccount}
             isNewAccount={isNewAccount}
             onSave={handleSave}
             onCancel={handleCancel}
+            isSubmitting={isAddingPurse} // استفاده مستقیم از وضعیت isLoading هوک
         />
     );
 };

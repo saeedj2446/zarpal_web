@@ -171,6 +171,8 @@ export const apiRequest = async <T = any>(
                 return rest as T;
             }else if (resp.responseCode === 1) {
                 store.dispatch(setSessionExpired(true));
+            }else if (resp.responseCode === 134444) {// معمولا لیست یا آبجکت خالی
+                return null
             }
             throw new ApiError(resp.responseCode, resp.responseText || "خطای ناشناخته", resp.responseData);
         }

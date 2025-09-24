@@ -1,3 +1,4 @@
+// components/accounts/AccountSlider.jsx
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -7,34 +8,45 @@ import "swiper/css/navigation";
 import { Navigation } from "swiper/modules";
 import { Eye } from "lucide-react";
 import { useAuth } from "@/lib/hooks/useAuth";
+import { useWallet } from "@/lib/hooks/useWallet"; // افزودن این خط
 import Image from "next/image";
 import { diffDate } from "@/lib/utils/utils";
 import jMoment from "moment-jalaali";
 import { Timer } from "@/components/common";
-import AccountCard from "./AccountCard";
 
-export default function AccountSlider({ onChange }) {
-  const [activeIndex, setActiveIndex] = useState(0);
+interface AccountSliderProps {
+  onChange: (account: any) => void;
+}
+
+export default function AccountSlider({ onChange}: AccountSliderProps) {
   const [isMounted, setIsMounted] = useState(false);
   const { profile = {} } = useAuth();
   const { purseList = [] } = profile;
+  const { currentWallet, setCurrentWalletValue } = useWallet(); // دریافت current wallet و تابع تنظیم آن
 
   // جلوگیری از خطای Hydration
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
+  // تعیین ایندکس فعلی بر اساس currentWallet
+  const activeIndex = currentWallet && purseList.length > 0
+      ? purseList.findIndex(account => account.id === currentWallet.id)
+      : 0;
+
+
+
   const handleSlideChange = (swiper) => {
     const account = purseList[swiper.realIndex];
-    setActiveIndex(swiper.realIndex);
+    setCurrentWalletValue(account); // تنظیم کیف فعلی
     onChange(account);
   };
 
   const getStatusColor = (status) => {
     switch (status) {
       case 'O': return 'bg-green-100';
-      case 'pending': return 'bg-yellow-100';
-      case 'approved': return 'bg-blue-100';
+      case 'C': return 'bg-yellow-100';
+      case 'E': return 'bg-blue-100';
       default: return 'bg-white';
     }
   };
@@ -42,8 +54,8 @@ export default function AccountSlider({ onChange }) {
   const getStatusText = (status) => {
     switch (status) {
       case 'O': return 'فعال';
-      case 'pending': return 'در دست بررسی';
-      case 'approved': return 'تایید شده';
+      case 'E': return 'تایید';
+      case 'C': return 'در انتظار تایید';
       default: return '';
     }
   };
@@ -64,16 +76,17 @@ export default function AccountSlider({ onChange }) {
           slidesPerView="auto"
           centeredSlides
           onSlideChange={handleSlideChange}
+          initialSlide={activeIndex >= 0 ? activeIndex : 0}
           className="w-full max-w-5xl"
       >
         {purseList.map((account, i) => (
             <SwiperSlide key={account.id} className="max-w-[300px]">
               <div
                   className={`px-4 min-w-[260px] max-w-[400px] my-4 overflow-hidden mx-auto 
-                        rounded-2xl border-2 border-gray-400 cursor-pointer transition-transform duration-300
-                        ${activeIndex === i
-                      ? "scale-105 shadow-lg " + getStatusColor(account.status)
-                      : "scale-95 opacity-70 bg-white"
+                        rounded-2xl border-2 cursor-pointer transition-transform duration-300
+                        ${currentWallet && account.id === currentWallet.id
+                      ? "scale-105 shadow-lg border-green-500 " + getStatusColor(account.status)
+                      : "scale-95 opacity-70 border-gray-400 bg-white"
                   }`}
               >
                 <div className="my-1 flex">
@@ -84,18 +97,18 @@ export default function AccountSlider({ onChange }) {
                         {account.title.substring(0, 20)}
                       </h2>
                       <span className="text-base text-gray-600">
-                     شناسه: {account.id}
-                    </span>
-                      <span className={`text-xs px-2  py-1 rounded-full m-1 inline-block
+                                        شناسه: {account.id}
+                                    </span>
+                      <span className={`text-xs px-2 py-1 rounded-full m-1 inline-block
                           ${account.status === 'active' ? 'bg-green-200 text-green-800' :
                           account.status === 'pending' ? 'bg-yellow-200 text-yellow-800' :
                               'bg-blue-200 text-blue-800'}`}>
-                          {getStatusText(account.status)}
-                    </span>
+                                        {getStatusText(account.status)}
+                                    </span>
                     </div>
                     {account.balance && (
                         <div className="flex items-center gap-2 text-gray-600">
-                          <Eye className="w-4 h-4"/>
+                          <Eye className="w-4 h-4" />
                           <h2 className="text-base font-bold mb-1">{account.balance} گرم طلا</h2>
                         </div>
                     )}
@@ -105,23 +118,25 @@ export default function AccountSlider({ onChange }) {
                         alt="Logo"
                         width={125}
                         height={75}
-                        style={{objectFit: "contain"}}
+                        style={{ objectFit: "contain" }}
                     />
 
                   </div>
 
                   <div className="mt-3 gap-5">
                     <div className="w-[90px] h-[90px] bg-white rounded-full flex items-center justify-center border">
-                    <span className="text-green-600 font-bold text-xs">
-                      {account.type}
-                    </span>
+                                    <span className="text-green-600 font-bold text-xs">
+                                        {account.type}
+                                    </span>
                     </div>
                     <div className={'mt-2'}>
-                      <Timer
-                          totalTime={diffDate(account.active.usageStart, account.active.usageEnd)}
-                          currentTime={diffDate(jMoment().format("YYYY-MM-DD HH:mm:ss"), account.active.usageEnd)}
-                          size={40}
-                      />
+                      {account.active && (
+                          <Timer
+                              totalTime={diffDate(account.active.usageStart, account.active.usageEnd)}
+                              currentTime={diffDate(jMoment().format("YYYY-MM-DD HH:mm:ss"), account.active.usageEnd)}
+                              size={40}
+                          />
+                      )}
                     </div>
 
                   </div>

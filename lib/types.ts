@@ -5,13 +5,15 @@ type Currency_Option = {
 };
 export const CurrencyOption: Currency_Option[] = [
   { value: "IRR", label: "ریال ایران" },
-  { value: "egld4Tst", label: "طلا-تست" },
+  { value: "gld4Tst", label: "طلا داخلی-تست" },
+  { value: "egld4Tst", label: "طلا خارجی-تست" },
   { value: "gldZrl", label: "طلای داخلی زریال" },
   { value: "egldZrl", label: "طلای خارجی زریال" },
 ];
 
 export const CurrencyOptionMap = {
   IRR: "ریال ایران",
+  gld4Tst: "طلا – داخلی – محیط تست",
   egld4Tst: "طلا – خارجی – محیط تست",
   gldZrl: "طلا – داخلی – زریال",
   egldZrl: "طلا – خارجی - زریال",
@@ -21,6 +23,7 @@ export const CurrencyOptionMap = {
 // 👇 تایپ اصلی
 export type Currency =
     |"gld4Tst"
+    |"egld4Tst"
     | "IRR" // ریال ایران
     | "USD" // دلار آمریکا
     | "EUR" // یورو
@@ -36,7 +39,8 @@ export type Currency =
 
 // 👇 مپ تایتل‌ها
 export const CurrencyTitle: Record<Currency, string> = {
-  "gld4Tst":"طلا 24",
+  "egld4Tst":"طلا خارجی تست",
+  "gld4Tst":"طلا داخلی تست",
   IRR: "ریال ایران",
   USD: "دلار آمریکا",
   EUR: "یورو",
@@ -472,6 +476,12 @@ export interface DtoOut_Response {
 
 export interface DtoIn_ShortId {
   id: number;    // آیدی لیست
+}
+
+export interface Dto_Response {
+  responseCode: number
+  responseData: any
+  responseText:string
 }
 
 // ====================== Data Types ======================

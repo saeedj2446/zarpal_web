@@ -7,7 +7,7 @@ import { walletApi } from "@/lib/api/wallet";
 import {
   DtoIn_cashInByOther,
   DtoIn_landingPage, DtoIn_PurseInfo, DtoIn_ShortId,
-  DtoOut_landingPage, DtoOut_Response,
+  DtoOut_landingPage, DtoOut_PurseInfo, DtoOut_Response,
 } from "@/lib/types";
 import jMoment from "moment-jalaali";
 import { generateMyMac, increaseStringSize } from "@/lib/utils/utils";
@@ -26,6 +26,49 @@ export const useWallet = () => {
   };
 
   const { profile, setProfile } = useAuth();
+
+  // lib/hooks/useWallet.ts
+
+// افزودن mutation برای ایجاد کیف جدید با مدیریت بهتر موفقیت و خطا
+  const addPurseMutation = useMutation<
+      DtoOut_PurseInfo,
+      Error,
+      DtoIn_PurseInfo
+  >({
+    mutationFn: walletApi.addPurse,
+    onSuccess: (response: DtoOut_PurseInfo, variables) => {
+      const { purseList = [], ...rest } = profile ?? {};
+      debugger
+      // دریافت کیف جدید از پاسخ
+      const newPurse = response.purse;
+
+      // افزودن کیف جدید به لیست کیف‌ها
+      const updatedPurseList = [...purseList, newPurse];
+
+      // به‌روزرسانی پروفایل کاربر
+      setProfile({
+        ...rest,
+        purseList: updatedPurseList,
+      });
+
+      // تنظیم کیف جدید به عنوان کیف فعلی
+      setCurrentWalletValue(newPurse);
+
+      // نمایش پیام موفقیت
+      toast({
+        title: "موفقیت",
+        description: "حساب جدید با موفقیت ایجاد شد.",
+      });
+    },
+    onError: (error: any) => {
+      if(error.code===33 && error.data==="purse"){
+
+        return toast({title:"خطا در ایجاد حساب جدید",description:"در حال حاضر شما دارای این نوع کیف می باشید. کیف از نوع دیگری ثبت کنید",variant: "destructive"});
+      }
+      toast(error.getToast?.() ?? "خطا در ایجاد حساب");
+    },
+  });
+
   const editPurseMutation = useMutation<
       DtoOut_Response,
       Error,
@@ -167,21 +210,27 @@ export const useWallet = () => {
     // Cash In By Other
     cashInByOtherMutation,
 
+
+    // افزودن متدهای جدید برای ایجاد کیف
+    addPurseMutation,
+    addPurse: addPurseMutation.mutateAsync,
+    isAddingPurse: addPurseMutation.isPending,
+
     editPurseMutation, // خود میوتیشن برای دسترسی کامل
     editPurse: editPurseMutation.mutateAsync, // شورتکات برای async استفاده
-    isEditingPurse: editPurseMutation.isLoading,
+    isEditingPurse: editPurseMutation.isPending,
     editPurseError: editPurseMutation.error,
     editPurseData: editPurseMutation.data,
 
     acceptLandingPage: acceptLandingPageMutation.mutateAsync,
-    isAcceptingLandingPage: acceptLandingPageMutation.isLoading,
+    isAcceptingLandingPage: acceptLandingPageMutation.isPending,
 
     denyLandingPage: denyLandingPageMutation.mutateAsync,
-    isDenyingLandingPage: denyLandingPageMutation.isLoading,
+    isDenyingLandingPage: denyLandingPageMutation.isPending,
 
     // Cash In By Other
     cashInByOther: cashInByOtherMutation.mutateAsync,
-    isCashInByOtherLoading: cashInByOtherMutation.isLoading,
+    isCashInByOtherLoading: cashInByOtherMutation.isPending,
     cashInByOtherError: cashInByOtherMutation.error,
     cashInByOtherData: cashInByOtherMutation.data,
 
@@ -190,7 +239,7 @@ export const useWallet = () => {
     //landingPage
     forceFetchLandingPage: landingPageMutation.mutate,  // fetch دستی و بروزرسانی cache
     forceFetchLandingPageAsync: landingPageMutation.mutateAsync,
-    isLoadingLandingPage: landingPageMutation.isLoading,
+    isLoadingLandingPage: landingPageMutation.isPending,
     isErrorLandingPage: landingPageMutation.isError,
     errorLandingPage: landingPageMutation.error,
     isSuccessLandingPage: landingPageMutation.isSuccess,

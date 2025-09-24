@@ -1,6 +1,8 @@
+// app/accounts/account-management.tsx
+
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowRight, Plus } from "lucide-react";
 import Link from "next/link";
 import AccountSlider from "./account-slider";
@@ -13,6 +15,7 @@ export default function AccountManagementComponent() {
     const { currentWallet } = useWallet();
     const [selectedAccount, setSelectedAccount] = useState(currentWallet);
     const [isNewAccount, setIsNewAccount] = useState(false);
+    const [newAccountId, setNewAccountId] = useState<string | null>(null); // شناسه حساب جدید
 
     const handleAccountSelect = (account) => {
         setIsNewAccount(false);
@@ -22,12 +25,19 @@ export default function AccountManagementComponent() {
     const handleCreateNewAccount = () => {
         setIsNewAccount(true);
         setSelectedAccount(null);
+        setNewAccountId(null); // ریست شناسه حساب جدید
     };
 
     const handleCancelNewAccount = () => {
-        // بازگشت به حساب قبلی
         setIsNewAccount(false);
         setSelectedAccount(currentWallet);
+        setNewAccountId(null); // ریست شناسه حساب جدید
+    };
+
+    // پس از ایجاد حساب جدید، شناسه آن را تنظیم کن
+    const handleAccountCreated = (accountId: string) => {
+        setNewAccountId(accountId);
+        setIsNewAccount(false); // خروج از حالت ایجاد حساب
     };
 
     return (
@@ -37,7 +47,7 @@ export default function AccountManagementComponent() {
                 <Link href="/profile" className="text-white">
                     <ArrowRight className="w-6 h-6" />
                 </Link>
-                <span className="text-lg font-medium">مدیریت حساب</span>
+                <span className="text-lg font-medium">حسابهای من </span>
                 <button
                     onClick={handleCreateNewAccount}
                     className="bg-white text-[#a85a7a] rounded-full p-2 hover:bg-gray-100 transition-colors"
@@ -50,7 +60,9 @@ export default function AccountManagementComponent() {
             {/* Account Slider - فقط در حالت غیر از ایجاد حساب جدید نمایش داده می‌شود */}
             {!isNewAccount && (
                 <div className="py-8">
-                    <AccountSlider onChange={handleAccountSelect} />
+                    <AccountSlider
+                        onChange={handleAccountSelect}
+                    />
                 </div>
             )}
 
@@ -60,6 +72,7 @@ export default function AccountManagementComponent() {
                     selectedAccount={selectedAccount}
                     isNewAccount={isNewAccount}
                     onCancelNewAccount={handleCancelNewAccount}
+                    onAccountCreated={handleAccountCreated}
                 />
             </div>
         </div>

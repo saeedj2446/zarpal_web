@@ -1,7 +1,10 @@
+// lib/api/wallet.ts
+
 import {
   Dto_Response, DtoIn_cashInByOther,
   DtoIn_currencyRate, DtoIn_landingPage, DtoIn_PurseInfo, DtoIn_ShortId,
   DtoOut_currencyRate, DtoOut_FinReq, DtoOut_landingPage, DtoOut_PaymentLink, DtoOut_Response,
+  DtoOut_PurseInfo  // اضافه کردن خروجی سرویس جدید
 } from "../types"
 
 import {apiRequest} from "@/lib/api/apiRequest"
@@ -48,5 +51,11 @@ export const walletApi = {
     });
   },
 
-
+  
+  addPurse: async (data: DtoIn_PurseInfo): Promise<DtoOut_PurseInfo> => {
+    return apiRequest("/addPurse", {
+      method: "POST",
+      data,
+    });
+  },
 }

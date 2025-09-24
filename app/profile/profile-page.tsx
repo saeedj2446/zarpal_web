@@ -73,7 +73,7 @@ export default function ProfileComponent() {
       <div className="min-h-screen bg-gray-100 ">
         {/* Header */}
         <div className="bg-[#a85a7a] text-white p-4 flex items-center justify-between">
-          <Link href="/app/public" className="text-white">
+          <Link href="/" className="text-white">
             <ArrowRight className="w-6 h-6"/>
           </Link>
           <span className="text-lg font-medium">پروفایل کاربری</span>

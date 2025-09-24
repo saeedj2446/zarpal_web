@@ -131,7 +131,7 @@ export const useTodos = () => {
 
   return {
     todos: todosQuery.data?.todos || [],
-    isLoading: todosQuery.isLoading,
+    isLoading: todosQuery.isPending,
     error: todosQuery.error,
     refetch: todosQuery.refetch,
     createTodo: createTodoMutation.mutateAsync,

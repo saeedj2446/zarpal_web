@@ -9,7 +9,7 @@ import Link from "next/link";
 export default function Requestpage() {
   const router = useRouter();
   return (
-      <div className="flex flex-col bg-gray-100 font-['iransans-number'] ">
+      <div className="flex flex-1 flex-col bg-gray-100 font-['iransans-number'] ">
           <div className="bg-[#a85a7a] text-white p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                   <CreditCard className="w-8 h-8"/>
@@ -21,7 +21,7 @@ export default function Requestpage() {
                   <ArrowLeft className="w-5 h-5"/>
               </Link>
           </div>
-          <div className="flex flex-col  px-4 py-6 ">
+          <div className="flex flex-1 flex-col  px-4 py-6 ">
               <Request/>
           </div>
 

@@ -85,6 +85,6 @@ export const useFile = () => {
         isUploadingFile: uploading,
         fetchFile: getFileMutation.mutateAsync,
         uploadFile: putFileMutation.mutateAsync,
-        isFetchingFile: getFileMutation.isLoading,
+        isFetchingFile: getFileMutation.isPending,
     };
 };

@@ -1,4 +1,5 @@
 // components/accounts/AccountEdit.jsx
+
 "use client";
 
 import React, { useEffect } from "react";
@@ -22,7 +23,7 @@ const schema = z.object({
     title: z.string().min(2, "عنوان الزامی است"),
     currency: z.preprocess(
         (val) => (val === "" ? undefined : val),
-        z.enum(["IRR", "egld4Tst", "gldZrl", "egldZrl"], {
+        z.enum(["IRR", "egld4Tst", "gldZrl", "egldZrl","gld4Tst"], {
             errorMap: () => ({ message: "ارز کیف الزامی است" }),
         })
     ),
@@ -63,37 +64,46 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-const AccountEdit = ({ account, isNewAccount, onSave, onCancel }) => {
-    const { editPurseMutation } = useWallet();
+interface AccountEditProps {
+    account: any;
+    isNewAccount: boolean;
+    onSave: (data: any) => void;
+    onCancel: () => void;
+    isSubmitting?: boolean;
+}
 
-    // تنظیم مقادیر پیش‌فرض بر اساس حساب انتخاب شده
-    let defaultValues = {};
-    if (account) {
-        defaultValues = {
-            title: account.title || "",
-            currency: account.currency || "",
-            provinceId: account.provinceId != null
-                ? String(increaseStringSize(account.provinceId, 2, "0")) : "",
-            city: account.city != null ? String(account.city) : "",
-            contact: account.contact || "",
-            address: account.address || "",
-            iconId: account.iconId || null,
-            licenceId: account.licenceId || null,
-            guildId: account.guildId || null,
-        };
-    } else {
-        defaultValues = {
-            title: "",
-            currency: "",
-            provinceId: "",
-            city: "",
-            contact: "",
-            address: "",
-            iconId: null,
-            licenceId: null,
-            guildId: null,
-        };
-    }
+const AccountEdit = ({ account, isNewAccount, onSave, onCancel, isSubmitting = false }: AccountEditProps) => {
+    // حذف استفاده از isAddingPurse در این کامپوننت چون مستقیماً از هوک استفاده می‌کنیم
+
+    // تنظیم مقادیر پیش‌فرض بر اساس حالت ایجاد یا ویرایش
+    const defaultValues: FormData = React.useMemo(() => {
+        if (account) {
+            return {
+                title: account.title || "",
+                currency: account.currency || "",
+                provinceId: account.provinceId != null
+                    ? String(increaseStringSize(account.provinceId, 2, "0")) : "",
+                city: account.city != null ? String(account.city) : "",
+                contact: account.contact || "",
+                address: account.address || "",
+                iconId: account.iconId || null,
+                licenceId: account.licenceId || null,
+                guildId: account.guildId || null,
+            };
+        } else {
+            return {
+                title: "",
+                currency: "IRR", // مقدار پیش‌فرض برای حساب جدید
+                provinceId: "",
+                city: "",
+                contact: "",
+                address: "",
+                iconId: null,
+                licenceId: null,
+                guildId: null,
+            };
+        }
+    }, [account]);
 
     const form = useForm<FormData>({
         resolver: zodResolver(schema),
@@ -145,6 +155,7 @@ const AccountEdit = ({ account, isNewAccount, onSave, onCancel }) => {
                         size="sm"
                         onClick={onCancel}
                         className="text-gray-500 hover:text-gray-700"
+                        disabled={isSubmitting}
                     >
                         <X className="w-5 h-5" />
                     </Button>
@@ -165,6 +176,7 @@ const AccountEdit = ({ account, isNewAccount, onSave, onCancel }) => {
                                                 className="w-full"
                                                 dir="rtl"
                                                 placeholder="مثلا، کلینیک زیبایی دلون"
+                                                disabled={isSubmitting}
                                             />
                                         </FloatingLabel>
                                     </FormControl>
@@ -173,26 +185,29 @@ const AccountEdit = ({ account, isNewAccount, onSave, onCancel }) => {
                             )}
                         />
 
-                        {/* رسته */}
-                        <FormField
-                            control={form.control}
-                            name="guildId"
-                            render={({ field, fieldState }) => (
-                                <FormItem>
-                                    <FormControl>
-                                        <DropSelector
-                                            {...field}
-                                            placeholder="رسته خود را انتخاب کنید"
-                                            options={BusinessCategories}
-                                            onChange={(val) => field.onChange(val)}
-                                        />
-                                    </FormControl>
-                                    {fieldState.error && (
-                                        <FormMessage>{fieldState.error.message}</FormMessage>
-                                    )}
-                                </FormItem>
-                            )}
-                        />
+                        {/* رسته - فقط در حالت ویرایش نمایش داده می‌شود */}
+                        {!isNewAccount && (
+                            <FormField
+                                control={form.control}
+                                name="guildId"
+                                render={({ field, fieldState }) => (
+                                    <FormItem>
+                                        <FormControl>
+                                            <DropSelector
+                                                {...field}
+                                                placeholder="رسته خود را انتخاب کنید"
+                                                options={BusinessCategories}
+                                                onChange={(val) => field.onChange(val)}
+                                                disabled={isSubmitting}
+                                            />
+                                        </FormControl>
+                                        {fieldState.error && (
+                                            <FormMessage>{fieldState.error.message}</FormMessage>
+                                        )}
+                                    </FormItem>
+                                )}
+                            />
+                        )}
 
                         {/* لوگو و مجوز */}
                         <div className="flex flex-wrap gap-6">
@@ -210,6 +225,7 @@ const AccountEdit = ({ account, isNewAccount, onSave, onCancel }) => {
                                                 autoUpload
                                                 fileType="image/*"
                                                 onUploadComplete={(val) => field.onChange()}
+                                                disabled={isSubmitting}
                                             />
                                         </FormControl>
                                         <FormMessage>{fieldState.error?.message}</FormMessage>
@@ -231,6 +247,7 @@ const AccountEdit = ({ account, isNewAccount, onSave, onCancel }) => {
                                                 autoUpload
                                                 fileType="image/*"
                                                 onUploadComplete={field.onChange}
+                                                disabled={isSubmitting}
                                             />
                                         </FormControl>
                                         {fieldState.error && (
@@ -253,6 +270,7 @@ const AccountEdit = ({ account, isNewAccount, onSave, onCancel }) => {
                                             placeholder="ارز کیف"
                                             options={CurrencyOption}
                                             onChange={(val) => field.onChange(val)}
+                                            disabled={isSubmitting}
                                         />
                                     </FormControl>
                                     <FormMessage>{fieldState.error?.message}</FormMessage>
@@ -277,6 +295,7 @@ const AccountEdit = ({ account, isNewAccount, onSave, onCancel }) => {
                                                 type="tel"
                                                 maxLength={11}
                                                 placeholder="09123456789"
+                                                disabled={isSubmitting}
                                             />
                                         </FloatingLabel>
                                     </FormControl>
@@ -301,6 +320,7 @@ const AccountEdit = ({ account, isNewAccount, onSave, onCancel }) => {
                                                     field.onChange(val);
                                                     form.setValue("city", "");
                                                 }}
+                                                disabled={isSubmitting}
                                             />
                                         </FormControl>
                                         {fieldState.error && (
@@ -327,7 +347,7 @@ const AccountEdit = ({ account, isNewAccount, onSave, onCancel }) => {
                                                     {...field}
                                                     placeholder="شهر"
                                                     options={cityOptions}
-                                                    disabled={!selectedProvince}
+                                                    disabled={!selectedProvince || isSubmitting}
                                                     onChange={(val) => field.onChange(val)}
                                                 />
                                             </FormControl>
@@ -357,6 +377,7 @@ const AccountEdit = ({ account, isNewAccount, onSave, onCancel }) => {
                                                 className="w-full min-h-[80px]"
                                                 dir="rtl"
                                                 placeholder="آدرس کامل کسب و کار"
+                                                disabled={isSubmitting}
                                             />
                                         </FloatingLabel>
                                     </FormControl>
@@ -368,12 +389,12 @@ const AccountEdit = ({ account, isNewAccount, onSave, onCancel }) => {
                         <Button
                             type="submit"
                             className="w-full bg-[#a85a7a] hover:bg-[#96527a] text-white py-3 text-lg font-medium rounded-lg disabled:opacity-50"
-                            disabled={!hasChanges || editPurseMutation.isLoading}
+                            disabled={!hasChanges || isSubmitting}
                         >
-                            {editPurseMutation.isLoading ? (
+                            {isSubmitting ? (
                                 <div className="flex items-center justify-center">
                                     <div className="w-4 h-4 border-t-2 border-white border-solid rounded-full animate-spin mr-2"></div>
-                                    در حال ذخیره...
+                                    {isNewAccount ? "در حال ایجاد حساب..." : "در حال ذخیره..."}
                                 </div>
                             ) : (
                                 <div className="flex items-center justify-center">

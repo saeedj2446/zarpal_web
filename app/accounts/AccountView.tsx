@@ -1,10 +1,26 @@
-// components/accounts/AccountView.jsx
 "use client";
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/radix/card";
 import { Button } from "@/components/radix/button";
-import { Edit2, MapPin, Phone, Building2, FileText, Package, CreditCard, TrendingUp, Calendar, Clock, Plus, Star } from "lucide-react";
+import {
+    Edit2,
+    MapPin,
+    Phone,
+    Building2,
+    FileText,
+    Package,
+    CreditCard,
+    TrendingUp,
+    Calendar,
+    Clock,
+    Plus,
+    Star,
+    Edit,
+    AlertCircle,
+    Hourglass,
+    XCircle
+} from "lucide-react";
 import { ImagePreview, Timer } from "@/components/common";
 import { diffDate } from "@/lib/utils/utils";
 import {
@@ -33,19 +49,69 @@ const AccountView = ({ account, onEdit, onPackagePurchase }) => {
         return endDate < new Date();
     };
 
+    // بررسی وضعیت کیف
+    const walletStatus = account?.status;
+    const isWalletActive = walletStatus === 'O'; // کیف‌های فعال
+    const isWalletPending = walletStatus === 'C'; // کیف‌های در حال بررسی
+    const isWalletExpired = walletStatus === 'E'; // کیف‌های منقضی شده (بسته منقضی شده)
+
     // بررسی وضعیت بسته فعال
     const hasActivePackage = account?.active && !isPackageExpired(account.active);
     const activePackage = account?.active;
     const isFreePackage = activePackage?.paymentType === 'F';
     const isExpired = account?.active && isPackageExpired(account.active);
 
+    // تابع کمکی برای نمایش وضعیت کیف
+    const renderWalletStatus = () => {
+        switch (walletStatus) {
+            case 'O':
+                return (
+                    <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        فعال
+                    </div>
+                );
+            case 'C':
+                return (
+                    <div className="flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">
+                        <Hourglass className="w-3 h-3" />
+                        در حال بررسی
+                    </div>
+                );
+            case 'E':
+                return (
+                    <div className="flex items-center gap-1 px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">
+                        <XCircle className="w-3 h-3" />
+                        منقضی شده
+                    </div>
+                );
+            default:
+                return null;
+        }
+    };
+
     return (
         <Card className="bg-white shadow-lg overflow-hidden">
-            <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-bold text-center">
-                    {account?.title || "حساب جدید"}
-                </CardTitle>
+            <CardHeader className="pb-2 flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                    <CardTitle className="text-lg font-bold text-center">
+                        {account?.title || "حساب جدید"}
+                    </CardTitle>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={onEdit}
+                        className="p-2 hover:bg-gray-100"
+                    >
+                        <Edit
+                            style={{ width: "24px", height: "24px" }}
+                            className="text-gray-600"
+                        />
+                    </Button>
+                </div>
+                {renderWalletStatus()}
             </CardHeader>
+
             <CardContent className="p-6">
                 <div className="flex flex-col md:flex-row gap-6">
                     {/* لوگو */}
@@ -70,12 +136,14 @@ const AccountView = ({ account, onEdit, onPackagePurchase }) => {
                             <div className="flex items-center gap-2 mt-1">
                                 <span className={`px-2 py-1 rounded-full text-xs ${
                                     account?.status === 'O' ? 'bg-green-100 text-green-800' :
-                                        account?.status === 'P' ? 'bg-yellow-100 text-yellow-800' :
-                                            'bg-blue-100 text-blue-800'
+                                        account?.status === 'C' ? 'bg-yellow-100 text-yellow-800' :
+                                            account?.status === 'E' ? 'bg-red-100 text-red-800' :
+                                                'bg-blue-100 text-blue-800'
                                 }`}>
                                     {account?.status === 'O' ? 'فعال' :
-                                        account?.status === 'P' ? 'در حال بررسی' :
-                                            'تایید شده'}
+                                        account?.status === 'C' ? 'در حال بررسی' :
+                                            account?.status === 'E' ? 'منقضی شده' :
+                                                'تایید شده'}
                                 </span>
                                 <span className="text-sm text-gray-500">شناسه: {account?.id}</span>
                             </div>
@@ -124,185 +192,65 @@ const AccountView = ({ account, onEdit, onPackagePurchase }) => {
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-6">
-                            {/* کادر بسته فعال */}
-                            {isExpired ? (
-                                // بسته فعال منقضی شده
-                                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 border-dashed">
+                            {/* کادر وضعیت کیف برای کیف‌های در حال بررسی */}
+                            {isWalletPending && (
+                                <div className="p-6 bg-yellow-50 rounded-lg border border-yellow-200">
                                     <div className="flex flex-col items-center justify-center py-4">
-                                        <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-3">
-                                            <Clock className="w-6 h-6 text-red-600" />
+                                        <div className="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center mb-4">
+                                            <Hourglass className="w-8 h-8 text-yellow-600" />
                                         </div>
-                                        <h4 className="font-medium text-gray-700 mb-2">زمان بسته رایگان شما پایان یافته</h4>
-                                        <p className="text-sm text-gray-500 text-center mb-4">
-                                            برای ادامه استفاده از خدمات، لطفاً بسته جدیدی خریداری کنید
+                                        <h3 className="text-xl font-bold text-gray-800 mb-2">کیف شما در انتظار تایید است</h3>
+                                        <p className="text-gray-600 text-center max-w-md mb-6">
+                                            کیف شما در حال بررسی توسط تیم پشتیبانی است. پس از تایید، می‌توانید از کیف خود استفاده کنید.
                                         </p>
-                                        <Dialog>
-                                            <DialogTrigger asChild>
-                                                <Button className="bg-green-600 hover:bg-green-700 text-white">
-                                                    خرید بسته جدید
-                                                </Button>
-                                            </DialogTrigger>
-                                            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                                                <DialogHeader>
-                                                    <DialogTitle>انتخاب بسته جدید</DialogTitle>
-                                                    <DialogDescription>
-                                                        بسته مورد نظر خود را انتخاب کنید
-                                                    </DialogDescription>
-                                                </DialogHeader>
-                                                <PackageSlider onPackageSelect={onPackagePurchase} />
-                                            </DialogContent>
-                                        </Dialog>
-                                    </div>
-                                </div>
-                            ) : hasActivePackage ? (
-                                // بسته فعال معتبر
-                                <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
-                                                <span className="text-white text-sm font-bold">فعال</span>
-                                            </div>
-                                            <h4 className="font-bold text-lg">{activePackage.packageTitle}</h4>
+                                        <div className="flex items-center gap-2 text-sm text-yellow-700 bg-yellow-100 px-4 py-2 rounded-full">
+                                            <AlertCircle className="w-4 h-4" />
+                                            این فرآیند ممکن است تا ۲۴ ساعت زمان ببرد
                                         </div>
-                                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
-                                            {activePackage.paymentType === 'F' ? 'رایگان' : 'پرداخت شده'}
-                                        </span>
-                                    </div>
-                                    <Timer
-                                        color={'green'}
-                                        totalTime={diffDate(activePackage.usageStart, activePackage.usageEnd)}
-                                        currentTime={diffDate(jMoment().format("YYYY-MM-DD HH:mm:ss"), activePackage.usageEnd)}
-                                        size={40}
-                                    />
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
-                                        <div className="flex items-center gap-2">
-                                            <Calendar className="w-4 h-4 text-green-600" />
-                                            <span className="text-sm text-gray-700">شروع: {formatDate(activePackage.usageStart)}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <Calendar className="w-4 h-4 text-green-600" />
-                                            <span className="text-sm text-gray-700">پایان: {formatDate(activePackage.usageEnd)}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <Clock className="w-4 h-4 text-green-600" />
-                                            <span className="text-sm text-gray-700">تاریخ خرید: {formatDate(activePackage.createdOn)}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : (
-                                // بدون بسته فعال
-                                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 border-dashed">
-                                    <div className="flex flex-col items-center justify-center py-4">
-                                        <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-3">
-                                            <Plus className="w-6 h-6 text-green-600" />
-                                        </div>
-                                        <h4 className="font-medium text-gray-700 mb-2">بسته فعال ندارید</h4>
-                                        <p className="text-sm text-gray-500 text-center mb-4">
-                                            برای استفاده از خدمات، ابتدا باید یک بسته فعال خریداری کنید
-                                        </p>
-                                        <Dialog>
-                                            <DialogTrigger asChild>
-                                                <Button className="bg-green-600 hover:bg-green-700 text-white">
-                                                    خرید بسته فعال
-                                                </Button>
-                                            </DialogTrigger>
-                                            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                                                <DialogHeader>
-                                                    <DialogTitle>انتخاب بسته فعال</DialogTitle>
-                                                    <DialogDescription>
-                                                        بسته مورد نظر خود را انتخاب کنید
-                                                    </DialogDescription>
-                                                </DialogHeader>
-                                                <PackageSlider onPackageSelect={onPackagePurchase} />
-                                            </DialogContent>
-                                        </Dialog>
                                     </div>
                                 </div>
                             )}
 
-                            {/* کادر بسته رزرو یا خرید بسته جدید (برای بسته‌های رایگان) */}
-                            {hasActivePackage && (
-                                isFreePackage ? (
-                                    // نمایش کادر خرید بسته جدید برای بسته‌های رایگان
-                                    <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                                        <div className="flex flex-col items-center justify-center py-4">
-                                            <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-3">
-                                                <Star className="w-6 h-6 text-blue-600" />
-                                            </div>
-                                            <h4 className="font-medium text-gray-700 mb-2">امکانات بیشتر با خرید بسته</h4>
-                                            <p className="text-sm text-gray-500 text-center mb-4">
-                                                با خرید بسته‌های پولی، از امکانات ویژه و سقفهای پرداخت بالاتر بهره‌مند شوید
-                                            </p>
-                                            <Dialog>
-                                                <DialogTrigger asChild>
-                                                    <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                                                        خرید بسته جدید
-                                                    </Button>
-                                                </DialogTrigger>
-                                                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                                                    <DialogHeader>
-                                                        <DialogTitle>انتخاب بسته جدید</DialogTitle>
-                                                        <DialogDescription>
-                                                            بسته مورد نظر خود را انتخاب کنید
-                                                        </DialogDescription>
-                                                    </DialogHeader>
-                                                    <PackageSlider onPackageSelect={onPackagePurchase} />
-                                                </DialogContent>
-                                            </Dialog>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    // نمایش کادر بسته رزرو برای بسته‌های پولی
-                                    account?.reserve ? (
-                                        <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
-                                                        <span className="text-white text-sm font-bold">رزرو</span>
-                                                    </div>
-                                                    <h4 className="font-bold text-lg">{account.reserve.packageTitle}</h4>
+                            {/* بخش بسته‌ها برای کیف‌های فعال و منقضی شده */}
+                            {(isWalletActive || isWalletExpired) && (
+                                <>
+                                    {isWalletExpired && (
+                                        // پیام منقضی شدن بسته برای کیف‌های با وضعیت E
+                                        <div className="p-4 bg-red-50 rounded-lg border border-red-200">
+                                            <div className="flex flex-col items-center justify-center py-4">
+                                                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-3">
+                                                    <Clock className="w-6 h-6 text-red-600" />
                                                 </div>
-                                                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                                                    {account.reserve.paymentType === 'F' ? 'رایگان' : 'پرداخت شده'}
-                                                </span>
+                                                <h4 className="font-medium text-gray-700 mb-2">زمان بسته شما به پایان رسیده است</h4>
+                                                <p className="text-sm text-gray-500 text-center mb-4">
+                                                    برای ادامه استفاده از خدمات، لطفاً بسته جدیدی خریداری کنید
+                                                </p>
                                             </div>
+                                        </div>
+                                    )}
 
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
-                                                <div className="flex items-center gap-2">
-                                                    <Calendar className="w-4 h-4 text-blue-600" />
-                                                    <span className="text-sm text-gray-700">شروع: {formatDate(account.reserve.usageStart)}</span>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <Calendar className="w-4 h-4 text-blue-600" />
-                                                    <span className="text-sm text-gray-700">پایان: {formatDate(account.reserve.usageEnd)}</span>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <Clock className="w-4 h-4 text-blue-600" />
-                                                    <span className="text-sm text-gray-700">تاریخ خرید: {formatDate(account.reserve.createdOn)}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ) : (
+                                    {isExpired && !isWalletExpired ? (
+                                        // بسته فعال منقضی شده (برای کیف‌های فعال)
                                         <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 border-dashed">
                                             <div className="flex flex-col items-center justify-center py-4">
-                                                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-3">
-                                                    <Plus className="w-6 h-6 text-blue-600" />
+                                                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-3">
+                                                    <Clock className="w-6 h-6 text-red-600" />
                                                 </div>
-                                                <h4 className="font-medium text-gray-700 mb-2">بسته رزرو ندارید</h4>
+                                                <h4 className="font-medium text-gray-700 mb-2">زمان بسته رایگان شما پایان یافته</h4>
                                                 <p className="text-sm text-gray-500 text-center mb-4">
-                                                    با خرید بسته رزرو، می‌توانید بسته بعدی خود را از همین حالا رزرو کنید
+                                                    برای ادامه استفاده از خدمات، لطفاً بسته جدیدی خریداری کنید
                                                 </p>
                                                 <Dialog>
                                                     <DialogTrigger asChild>
-                                                        <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                                                            خرید بسته رزرو
+                                                        <Button className="bg-green-600 hover:bg-green-700 text-white">
+                                                            خرید بسته جدید
                                                         </Button>
                                                     </DialogTrigger>
                                                     <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                                                         <DialogHeader>
-                                                            <DialogTitle>انتخاب بسته رزرو</DialogTitle>
+                                                            <DialogTitle>انتخاب بسته جدید</DialogTitle>
                                                             <DialogDescription>
-                                                                بسته مورد نظر خود را برای رزرو انتخاب کنید
+                                                                بسته مورد نظر خود را انتخاب کنید
                                                             </DialogDescription>
                                                         </DialogHeader>
                                                         <PackageSlider onPackageSelect={onPackagePurchase} />
@@ -310,8 +258,166 @@ const AccountView = ({ account, onEdit, onPackagePurchase }) => {
                                                 </Dialog>
                                             </div>
                                         </div>
-                                    )
-                                )
+                                    ) : hasActivePackage ? (
+                                        // بسته فعال معتبر
+                                        <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
+                                                        <span className="text-white text-sm font-bold">فعال</span>
+                                                    </div>
+                                                    <h4 className="font-bold text-lg">{activePackage.packageTitle}</h4>
+                                                </div>
+                                                <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                                                    {activePackage.paymentType === 'F' ? 'رایگان' : 'پرداخت شده'}
+                                                </span>
+                                            </div>
+                                            <Timer
+                                                color={'green'}
+                                                totalTime={diffDate(activePackage.usageStart, activePackage.usageEnd)}
+                                                currentTime={diffDate(jMoment().format("YYYY-MM-DD HH:mm:ss"), activePackage.usageEnd)}
+                                                size={40}
+                                            />
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+                                                <div className="flex items-center gap-2">
+                                                    <Calendar className="w-4 h-4 text-green-600" />
+                                                    <span className="text-sm text-gray-700">شروع: {formatDate(activePackage.usageStart)}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Calendar className="w-4 h-4 text-green-600" />
+                                                    <span className="text-sm text-gray-700">پایان: {formatDate(activePackage.usageEnd)}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Clock className="w-4 h-4 text-green-600" />
+                                                    <span className="text-sm text-gray-700">تاریخ خرید: {formatDate(activePackage.createdOn)}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        // بدون بسته فعال
+                                        <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 border-dashed">
+                                            <div className="flex flex-col items-center justify-center py-4">
+                                                <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-3">
+                                                    <Plus className="w-6 h-6 text-green-600" />
+                                                </div>
+                                                <h4 className="font-medium text-gray-700 mb-2">بسته فعال ندارید</h4>
+                                                <p className="text-sm text-gray-500 text-center mb-4">
+                                                    برای استفاده از خدمات، ابتدا باید یک بسته فعال خریداری کنید
+                                                </p>
+                                                <Dialog>
+                                                    <DialogTrigger asChild>
+                                                        <Button className="bg-green-600 hover:bg-green-700 text-white">
+                                                            خرید بسته فعال
+                                                        </Button>
+                                                    </DialogTrigger>
+                                                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                                                        <DialogHeader>
+                                                            <DialogTitle>انتخاب بسته فعال</DialogTitle>
+                                                            <DialogDescription>
+                                                                بسته مورد نظر خود را انتخاب کنید
+                                                            </DialogDescription>
+                                                        </DialogHeader>
+                                                        <PackageSlider onPackageSelect={onPackagePurchase} />
+                                                    </DialogContent>
+                                                </Dialog>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* کادر بسته رزرو یا خرید بسته جدید (برای بسته‌های رایگان) */}
+                                    {hasActivePackage && (
+                                        isFreePackage ? (
+                                            // نمایش کادر خرید بسته جدید برای بسته‌های رایگان
+                                            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                                <div className="flex flex-col items-center justify-center py-4">
+                                                    <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-3">
+                                                        <Star className="w-6 h-6 text-blue-600" />
+                                                    </div>
+                                                    <h4 className="font-medium text-gray-700 mb-2">امکانات بیشتر با خرید بسته</h4>
+                                                    <p className="text-sm text-gray-500 text-center mb-4">
+                                                        با خرید بسته‌های پولی، از امکانات ویژه و سقفهای پرداخت بالاتر بهره‌مند شوید
+                                                    </p>
+                                                    <Dialog>
+                                                        <DialogTrigger asChild>
+                                                            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                                                                خرید بسته جدید
+                                                            </Button>
+                                                        </DialogTrigger>
+                                                        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                                                            <DialogHeader>
+                                                                <DialogTitle>انتخاب بسته جدید</DialogTitle>
+                                                                <DialogDescription>
+                                                                    بسته مورد نظر خود را انتخاب کنید
+                                                                </DialogDescription>
+                                                            </DialogHeader>
+                                                            <PackageSlider onPackageSelect={onPackagePurchase} />
+                                                        </DialogContent>
+                                                    </Dialog>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            // نمایش کادر بسته رزرو برای بسته‌های پولی
+                                            account?.reserve ? (
+                                                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                                                                <span className="text-white text-sm font-bold">رزرو</span>
+                                                            </div>
+                                                            <h4 className="font-bold text-lg">{account.reserve.packageTitle}</h4>
+                                                        </div>
+                                                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                                                            {account.reserve.paymentType === 'F' ? 'رایگان' : 'پرداخت شده'}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+                                                        <div className="flex items-center gap-2">
+                                                            <Calendar className="w-4 h-4 text-blue-600" />
+                                                            <span className="text-sm text-gray-700">شروع: {formatDate(account.reserve.usageStart)}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <Calendar className="w-4 h-4 text-blue-600" />
+                                                            <span className="text-sm text-gray-700">پایان: {formatDate(account.reserve.usageEnd)}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <Clock className="w-4 h-4 text-blue-600" />
+                                                            <span className="text-sm text-gray-700">تاریخ خرید: {formatDate(account.reserve.createdOn)}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 border-dashed">
+                                                    <div className="flex flex-col items-center justify-center py-4">
+                                                        <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-3">
+                                                            <Plus className="w-6 h-6 text-blue-600" />
+                                                        </div>
+                                                        <h4 className="font-medium text-gray-700 mb-2">بسته رزرو ندارید</h4>
+                                                        <p className="text-sm text-gray-500 text-center mb-4">
+                                                            با خرید بسته رزرو، می‌توانید بسته بعدی خود را از همین حالا رزرو کنید
+                                                        </p>
+                                                        <Dialog>
+                                                            <DialogTrigger asChild>
+                                                                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                                                                    خرید بسته رزرو
+                                                                </Button>
+                                                            </DialogTrigger>
+                                                            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                                                                <DialogHeader>
+                                                                    <DialogTitle>انتخاب بسته رزرو</DialogTitle>
+                                                                    <DialogDescription>
+                                                                        بسته مورد نظر خود را برای رزرو انتخاب کنید
+                                                                    </DialogDescription>
+                                                                </DialogHeader>
+                                                                <PackageSlider onPackageSelect={onPackagePurchase} />
+                                                            </DialogContent>
+                                                        </Dialog>
+                                                    </div>
+                                                </div>
+                                            )
+                                        )
+                                    )}
+                                </>
                             )}
                         </CardContent>
                     </Card>
@@ -338,12 +444,14 @@ const AccountView = ({ account, onEdit, onPackagePurchase }) => {
                                     <p className="text-sm text-gray-500">وضعیت</p>
                                     <p className={`font-medium ${
                                         account?.status === 'O' ? 'text-green-600' :
-                                            account?.status === 'P' ? 'text-yellow-600' :
-                                                'text-blue-600'
+                                            account?.status === 'C' ? 'text-yellow-600' :
+                                                account?.status === 'E' ? 'text-red-600' :
+                                                    'text-blue-600'
                                     }`}>
                                         {account?.status === 'O' ? 'فعال' :
-                                            account?.status === 'P' ? 'در حال بررسی' :
-                                                'تایید شده'}
+                                            account?.status === 'C' ? 'در حال بررسی' :
+                                                account?.status === 'E' ? 'منقضی شده' :
+                                                    'تایید شده'}
                                     </p>
                                 </div>
                                 <div>
@@ -382,16 +490,6 @@ const AccountView = ({ account, onEdit, onPackagePurchase }) => {
 
                     {/* بخش محدودیت‌ها */}
                     <AccountLimits level={account?.level} />
-                </div>
-
-                <div className="flex justify-center mt-6">
-                    <Button
-                        onClick={onEdit}
-                        className="flex items-center gap-2 bg-[#a85a7a] hover:bg-[#96527a] text-white"
-                    >
-                        <Edit2 className="w-4 h-4" />
-                        ویرایش اطلاعات
-                    </Button>
                 </div>
             </CardContent>
         </Card>

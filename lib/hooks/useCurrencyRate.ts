@@ -33,8 +33,8 @@ export const useCurrencyRate = (currency?: string) => {
 
     return {
         rate: query.data,
-        isLoading: query.isLoading,
-        isFetching: query.isFetching,
+        isLoading: query.isPending,
+        isFetching: query.isPending,
         isError: query.isError,
         refetch: query.refetch,
         error: query.error,

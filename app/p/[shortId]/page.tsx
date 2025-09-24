@@ -138,7 +138,6 @@ export default function PaymentPage() {
                     onClick={() => forceFetchLandingPage({ shortId })}
                     className="bg-[#a85a7a] hover:bg-[#96527a] text-white"
                 >
-                    تلاش مجدد
                 </Button>
             </div>
         );

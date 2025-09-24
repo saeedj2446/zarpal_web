@@ -78,32 +78,7 @@ export function ImagePreview({ fileId, onDelete }: ImagePreviewProps) {
                             onClick={() => setIsZoomed(true)}
                         />
 
-                        {/* Delete Button */}
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
-                            <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                    <Button
-                                        size="sm"
-                                        variant="destructive"
-                                        className="h-8 w-8 p-0"
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle>حذف تصویر</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            آیا از حذف این تصویر مطمئن هستید؟ این عمل غیرقابل بازگشت است.
-                                        </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel>انصراف</AlertDialogCancel>
-                                        <AlertDialogAction onClick={onDelete}>حذف</AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
-                        </div>
+
                     </div>
                 </CardContent>
             </Card>

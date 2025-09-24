@@ -15,7 +15,7 @@ export default function GoldRateBoard() {
     const { currentWallet } = useSelector((state: RootState) => state.wallet);
     const [totalTime, setTotalTime] = useState<number>(0);
     const [currentTime, setCurrentTime] = useState<number>(0);
-
+    if (!currentWallet) return <div></div>;
     const fetchRate = async (currency: string) => {
         if (currency === "IRR") return null;
         const clientTime = jMoment().format("YYYY-MM-DD HH:mm:ss");
@@ -66,7 +66,7 @@ export default function GoldRateBoard() {
     }, [currentRate, refetch]);
 
 
-    const currency = currentWallet.currency;
+    const currency = currentWallet?.currency;
 
     if (!currentRate) return <div></div>;
 
