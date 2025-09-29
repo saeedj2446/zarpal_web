@@ -154,7 +154,7 @@ export function ChangePasswordForm() {
                                             className="w-full h-14 rounded-xl text-right border-2 border-gray-200 focus:border-purple-500"
                                             onChange={field.onChange}
                                             value={field.value}
-                                            format="YYYY/MM/DD"
+                                            format="YYYY-MM-DD"
                                         />
                                     </FormControl>
                                     <FormMessage className="text-right text-red-500 text-sm">

@@ -10,14 +10,12 @@ import { getLocationTitles } from "@/lib/utils/utils";
 import { CurrencyOptionMap } from "@/lib/types";
 
 interface AccountFormProps {
-    selectedAccount: any;
     isNewAccount: boolean;
     onCancelNewAccount: () => void;
     onAccountCreated?: (accountId: string) => void;
 }
 
 const AccountForm = ({
-                         selectedAccount,
                          isNewAccount,
                          onCancelNewAccount,
                          onAccountCreated
@@ -25,13 +23,14 @@ const AccountForm = ({
     const [editingMode, setEditingMode] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
     const [accountWithLabels, setAccountWithLabels] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
-    // استفاده مستقیم از هوک useWallet برای دسترسی به وضعیت‌ها
+
+    // استفاده مستقیم از هوک useWallet برای دسترسی به کیف فعلی
     const {
+        currentWallet,
         editPurseMutation,
         addPurseMutation,
         setCurrentWalletValue,
-        isAddingPurse  // استفاده مستقیم از وضعیت isLoading
+        isAddingPurse
     } = useWallet();
 
     useEffect(() => {
@@ -42,19 +41,19 @@ const AccountForm = ({
     }, [isNewAccount]);
 
     useEffect(() => {
-        if (isMounted && selectedAccount) {
-            let updatedAccount = { ...selectedAccount };
+        if (isMounted && currentWallet) {
+            let updatedAccount = { ...currentWallet };
 
-            const loc = getLocationTitles(selectedAccount.provinceId, selectedAccount.city) || {};
+            const loc = getLocationTitles(currentWallet.provinceId, currentWallet.city) || {};
             updatedAccount.provinceLabel = loc?.province;
             updatedAccount.cityLabel = loc?.city;
-            updatedAccount.currencyLabel = CurrencyOptionMap[selectedAccount.currency];
+            updatedAccount.currencyLabel = CurrencyOptionMap[currentWallet.currency];
 
             setAccountWithLabels(updatedAccount);
         } else if (isMounted) {
             setAccountWithLabels(null);
         }
-    }, [isMounted, selectedAccount]);
+    }, [isMounted, currentWallet]);
 
     const handleEdit = () => {
         setEditingMode(true);
@@ -87,13 +86,12 @@ const AccountForm = ({
         } else {
             const res = await editPurseMutation.mutate({
                 purse: {
-                    id: selectedAccount.id,
+                    id: currentWallet.id,
                     ...data,
                 },
             });
 
             // برای ویرایش، می‌توانیم بلافاصله از حالت ویرایش خارج شویم
-            // چون ویرایش معمولاً سریع است و نیاز به انتقال صفحه ندارد
             setEditingMode(false);
         }
     };
@@ -119,7 +117,6 @@ const AccountForm = ({
     if (!editingMode) {
         return (
             <AccountView
-                account={selectedAccount}
                 onEdit={handleEdit}
                 onPackagePurchase={handlePackagePurchase}
             />
@@ -129,11 +126,10 @@ const AccountForm = ({
     // حالت ویرایش/ایجاد - استفاده از وضعیت‌های React Query
     return (
         <AccountEdit
-            account={selectedAccount}
             isNewAccount={isNewAccount}
             onSave={handleSave}
             onCancel={handleCancel}
-            isSubmitting={isAddingPurse} // استفاده مستقیم از وضعیت isLoading هوک
+            isSubmitting={isAddingPurse}
         />
     );
 };

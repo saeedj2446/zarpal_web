@@ -1,11 +1,16 @@
 "use client";
 
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import { CreditCard, ArrowLeft, Phone } from "lucide-react";
 import Link from "next/link";
 import { useWallet } from "@/lib/hooks/useWallet";
-import UserWalletList from "@/app/public/user-wallet-list";
+import { useAuth } from "@/lib/hooks/useAuth"; // Added for user profile
+import WalletSelector from "@/app/public/WalletSelector";
 import GoldRateBoard from "@/app/public/gold-rate-board";
+import dynamic from 'next/dynamic';
+
+// بارگذاری داینامیک کتابخانه QRCode برای جلوگیری از خطای SSR
+const QRCode = dynamic(() => import('qrcode.react'), { ssr: false });
 
 // Radix
 import { Card, CardContent } from "@/components/radix/card";
@@ -24,7 +29,7 @@ import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription, D
 import { useForm } from "react-hook-form";
 import DateSelector from "@/components/common/DateSelector";
 import { FloatingLabel, NumberInput } from "@/components/common";
-import {normalizeDate, normalizePhoneNumber, rial2Toman} from "@/lib/utils/utils";
+import { normalizeDate, normalizePhoneNumber, rial2Toman } from "@/lib/utils/utils";
 import { DateObject } from "react-multi-date-picker";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
@@ -32,7 +37,7 @@ import AnalogTimePicker from "react-multi-date-picker/plugins/analog_time_picker
 
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {useRouter} from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 // ----- Zod Schema -----
 const cashInByOtherSchema = z.object({
@@ -46,13 +51,32 @@ const cashInByOtherSchema = z.object({
 export type CashInByOtherData = z.infer<typeof cashInByOtherSchema>;
 
 export default function RequestPaymentPage() {
-    const { currentWallet, cashInByOtherMutation, } = useWallet();
+    const { currentWallet, cashInByOtherMutation } = useWallet();
+    const { profile } = useAuth(); // Get user profile
     const [confirmModalOpen, setConfirmModalOpen] = useState(false);
     const [resultModalOpen, setResultModalOpen] = useState(false);
     const [formData, setFormData] = useState<CashInByOtherData | null>(null);
     const [paymentLink, setPaymentLink] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
+    const [paymentMethod, setPaymentMethod] = useState<'link' | 'qr' | 'self'>('link'); // Added 'self'
     const router = useRouter();
+    const searchParams = useSearchParams();
+
+    // دریافت پارامتر method از URL
+    useEffect(() => {
+        const method = searchParams.get('method');
+        if (method === 'qr' || method === 'link' || method === 'self') {
+            setPaymentMethod(method as 'link' | 'qr' | 'self');
+        }
+    }, [searchParams]);
+
+    // Pre-fill form with user data for self payment
+    useEffect(() => {
+        if (paymentMethod === 'self' && profile) {
+            form.setValue("payerContact", profile.contact || "");
+            form.setValue("payerTitle", profile.fisrtName+ " "+profile.lastName || "");
+        }
+    }, [paymentMethod, profile]);
 
     const now = new Date();
     const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
@@ -75,11 +99,13 @@ export default function RequestPaymentPage() {
         },
         mode: "all",
     });
+
     useEffect(() => {
         if (defaultDate) {
             form.setValue("expiredOn", defaultDate, { shouldValidate: true });
         }
     }, []);
+
     const handleOpenConfirm = (values: CashInByOtherData) => {
         setFormData(values);
         setConfirmModalOpen(true);
@@ -87,23 +113,31 @@ export default function RequestPaymentPage() {
 
     const handleConfirm = async () => {
         if (!formData) return;
+
         const input = {
             purse: currentWallet.id,
             amount: formData.amount,
             payerContact: normalizePhoneNumber(formData.payerContact),
             payerTitle: formData.payerTitle,
-            sendSms: false,
+            sendSms: paymentMethod === 'link', // فقط در حالت لینک پیامک ارسال شود
             desc: formData.desc,
             expiredOn: normalizeDate(formData.expiredOn),
             landingBase: "https://zarpal.vercel.app/p",
+            self: paymentMethod === 'self' // Added self parameter
         };
 
         setLoading(true);
         try {
             const res = await cashInByOtherMutation.mutateAsync(input);
-            const link=location.origin+"/"+res.shortId
+            const link = location.origin + "/" + res.shortId;
             setPaymentLink(link);
-            setResultModalOpen(true);
+
+            // For self payment, redirect immediately
+            if (paymentMethod === 'self') {
+                router.push(link);
+            } else {
+                setResultModalOpen(true);
+            }
         } catch (err) {
             console.error(err);
         } finally {
@@ -120,8 +154,7 @@ export default function RequestPaymentPage() {
                     <CreditCard className="w-8 h-8" />
                 </div>
                 <div className="flex items-center gap-3">
-                    <span className="text-lg">درخواست واریز</span>
-                </div>
+                    {searchParams.get('method')=="self"?"خرید طلا":"درخواست واریز"}                </div>
                 <Link href="/" className="p-2 rounded-full hover:bg-white/20 flex items-center justify-center">
                     <ArrowLeft className="w-5 h-5" />
                 </Link>
@@ -129,7 +162,7 @@ export default function RequestPaymentPage() {
 
             {/* Main Content */}
             <div className="max-w-[1000px] mx-auto p-4">
-                <UserWalletList />
+                <WalletSelector />
                 <GoldRateBoard />
 
                 {/* Card Form */}
@@ -150,7 +183,13 @@ export default function RequestPaymentPage() {
                                                         label="شماره همراه پرداخت کننده"
                                                         icon={<Phone className="w-5 h-5 text-gray-400" />}
                                                     >
-                                                        <Input {...field} maxLength={11}      className="w-full" dir="rtl" />
+                                                        <Input
+                                                            {...field}
+                                                            maxLength={11}
+                                                            className="w-full"
+                                                            dir="rtl"
+                                                            readOnly={paymentMethod === 'self'} // Read-only for self payment
+                                                        />
                                                     </FloatingLabel>
                                                 </FormControl>
                                                 <FormMessage className="text-right text-red-500 text-sm">{fieldState.error?.message}</FormMessage>
@@ -166,7 +205,11 @@ export default function RequestPaymentPage() {
                                             <FormItem className="mt-6">
                                                 <FormControl>
                                                     <FloatingLabel id="payerTitle" label="عنوان پرداخت کننده">
-                                                        <Input {...field} className="w-full" />
+                                                        <Input
+                                                            {...field}
+                                                            className="w-full"
+                                                            readOnly={paymentMethod === 'self'} // Read-only for self payment
+                                                        />
                                                     </FloatingLabel>
                                                 </FormControl>
                                                 <FormMessage className="text-right text-red-500 text-sm">{fieldState.error?.message}</FormMessage>
@@ -191,7 +234,6 @@ export default function RequestPaymentPage() {
                                         )}
                                     />
 
-
                                     <FormField
                                         control={form.control}
                                         name="desc"
@@ -200,14 +242,12 @@ export default function RequestPaymentPage() {
                                                 <FormControl>
                                                     <FloatingLabel id="desc" label="بابت">
                                                         <Input {...field} className="w-full" />
-                                                       {/* <Textarea {...field} className="w-full min-h-[80px]" />*/}
                                                     </FloatingLabel>
                                                 </FormControl>
                                                 <FormMessage className="text-right text-red-500 text-sm">{fieldState.error?.message}</FormMessage>
                                             </FormItem>
                                         )}
                                     />
-
 
                                     <FormField
                                         control={form.control}
@@ -221,7 +261,7 @@ export default function RequestPaymentPage() {
                                                             className="peer w-full h-14 rounded-xl"
                                                             onChange={field.onChange}
                                                             value={field.value}
-                                                            format="YYYY/MM/DD HH:mm"
+                                                            format="YYYY-MM-DD HH:mm"
                                                             plugins={[<AnalogTimePicker hideSeconds />]}
                                                             minDate={new DateObject({ calendar: persian, locale: persian_fa })}
                                                         />
@@ -234,7 +274,13 @@ export default function RequestPaymentPage() {
 
                                     {/* Submit */}
                                     <Button type="submit" disabled={loading} className="w-full bg-[#a85a7a] hover:bg-[#96527a] text-white py-6 text-lg font-medium rounded-xl">
-                                        {loading ? "در حال ارسال..." : "ارسال لینک پرداخت"}
+                                        {loading
+                                            ? "در حال پردازش..."
+                                            : paymentMethod === 'link'
+                                                ? "ارسال لینک پرداخت"
+                                                : paymentMethod === 'qr'
+                                                    ? "تولید بارکد پرداخت"
+                                                    : "خرید طلا"}
                                     </Button>
                                 </form>
                             </Form>
@@ -266,68 +312,73 @@ export default function RequestPaymentPage() {
                 </DialogContent>
             </Dialog>
 
-            {/* Modal لینک پرداخت */}
+            {/* Modal نتیجه پرداخت (only for link/qr) */}
+            {paymentMethod !== 'self' && (
+                <Dialog open={resultModalOpen} onOpenChange={setResultModalOpen}>
+                    <DialogContent hideCloseButton className="max-w-md mx-auto p-6 rounded-lg bg-white shadow-lg">
+                        <DialogTitle className="px-3">
+                            {paymentMethod === 'link' ? "لینک پرداخت" : "بارکد پرداخت"}
+                        </DialogTitle>
 
+                        <DialogDescription>
+                            {paymentMethod === 'link'
+                                ? "لینک پرداخت ایجاد و ارسال شد."
+                                : "بارکد پرداخت با موفقیت ایجاد شد."}
+                        </DialogDescription>
 
-            <Dialog open={resultModalOpen} onOpenChange={setResultModalOpen}>
-                <DialogContent hideCloseButton className="max-w-md mx-auto p-6 rounded-lg bg-white shadow-lg">
-                    <DialogTitle className="px-3" >لینک پرداخت</DialogTitle>
-                    {/*<DialogClose asChild>
-                        <button
-                            onClick={() => {
-                                setResultModalOpen(false);
-                                router.replace(`/`);
-                            }}
-                            className="absolute top-3  right-2 rounded-md p-1.5 hover:bg-gray-100"
-                        >
-                            <div className="w-5 h-5 text-white bg-red-950 rounded z-50">X</div>
-                        </button>
-                    </DialogClose>*/}
-                    <DialogDescription>
-                        لینک پرداخت ایجاد و ارسال شد.
-                    </DialogDescription>
-                    {paymentLink && (
-                        <div className="mt-4 text-center space-y-2">
-                            <a
-                                href={paymentLink}
-                                target="_blank"
-                                className="underline text-blue-600 break-all"
-                            >
-                                {paymentLink}
-                            </a>
-
-                        </div>
-                    )}
-                    <div className="mt-6 flex justify-between gap-2">
-                        {/* دکمه بستن - Primary */}
-                        <Button
-                            className="flex-1 py-2 text-sm bg-[#a85a7a] hover:bg-[#96527a] text-white rounded-md"
-                            onClick={() => {
-                                router.replace(`/`);
-                            }}
-                        >
-                            بستن
-                        </Button>
-
-                        {/* دکمه صفحه پرداخت - Secondary */}
                         {paymentLink && (
-                            <Button
-                                className="flex-1 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md"
-                                onClick={() => {
-                                    const shortId = paymentLink.split("/").pop();
-                                    if (shortId) {
-                                        router.replace(`/p/${shortId}`);
-                                    }
-                                }}
-                            >
-                                صفحه پرداخت
-                            </Button>
+                            <div className="mt-4 flex flex-col items-center space-y-4">
+                                {paymentMethod === 'link' ? (
+                                    // نمایش لینک در حالت عادی
+                                    <a
+                                        href={paymentLink}
+                                        target="_blank"
+                                        className="underline text-blue-600 break-all text-center"
+                                    >
+                                        {paymentLink}
+                                    </a>
+                                ) : (
+                                    // نمایش بارکد در حالت QR
+                                    <div className="flex flex-col items-center">
+                                        <div className="p-2 bg-white border rounded-lg">
+                                            <QRCode
+                                                value={paymentLink}
+                                                size={180}
+                                                level="H"
+                                                includeMargin={true}
+                                            />
+                                        </div>
+                                        <p className="mt-2 text-sm text-gray-600">
+                                            با اسکن بارکد به صفحه پرداخت هدایت می‌شوید
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
                         )}
-                    </div>
 
-                </DialogContent>
-            </Dialog>
+                        <div className="mt-6 flex justify-between gap-2">
+                            <Button
+                                className="flex-1 py-2 text-sm bg-[#a85a7a] hover:bg-[#96527a] text-white rounded-md"
+                                onClick={() => router.replace(`/`)}
+                            >
+                                بستن
+                            </Button>
 
+                            {paymentLink && paymentMethod === 'link' && (
+                                <Button
+                                    className="flex-1 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md"
+                                    onClick={() => {
+                                        const shortId = paymentLink.split("/").pop();
+                                        if (shortId) router.replace(`/p/${shortId}`);
+                                    }}
+                                >
+                                    صفحه پرداخت
+                                </Button>
+                            )}
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            )}
         </div>
     );
 }

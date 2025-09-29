@@ -25,7 +25,7 @@ const AccountLimits = ({ level }) => {
     const getPeriodTitle = (period) => {
         const periodMap = {
             'Forb': 'غیرمجاز',
-            'Trnx': 'به ازای هر تراکنش',
+            'Trnx': 'به ازای هر درخواست',
             'Daily': 'روزانه'
         };
         return periodMap[period] || period;

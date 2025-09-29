@@ -14,6 +14,7 @@ import { generateMyMac, increaseStringSize } from "@/lib/utils/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/lib/hooks/use-toast";
 import {useAuth} from "@/lib/hooks/useAuth";
+import {navigate, replace} from "@/lib/utils/router";
 
 export const useWallet = () => {
   const dispatch = useDispatch();
@@ -38,7 +39,7 @@ export const useWallet = () => {
     mutationFn: walletApi.addPurse,
     onSuccess: (response: DtoOut_PurseInfo, variables) => {
       const { purseList = [], ...rest } = profile ?? {};
-      debugger
+
       // دریافت کیف جدید از پاسخ
       const newPurse = response.purse;
 
@@ -79,8 +80,10 @@ export const useWallet = () => {
       const { purseList = [], ...rest } = profile ?? {};
 
       // purse جدید رو جایگزین می‌کنیم
-      const updatedPurseList = purseList.map((purse) =>
-          purse.id === variables.purse.id ? { ...purse, ...variables.purse } : purse
+      const updatedPurseList = purseList.map((purse) =>{
+            return   purse.id === variables.purse.id ? { ...purse, ...variables.purse } : purse
+          }
+
       );
 
       // کیف ویرایش شده رو پیدا می‌کنیم
@@ -195,6 +198,97 @@ export const useWallet = () => {
 
 
 
+    // تابع شبیه‌سازی برای به‌روزرسانی وضعیت CIo
+    const updateCioStatus = async ({ shortId, status }) => {
+      console.log(`[TEST] Updating CIO ${shortId} to status ${status}`);
+      return Promise.resolve({ success: true });
+    };
+
+    // استفاده از mutation موجود برای خرید بسته
+  const addPermissionMutation = useMutation({
+    mutationFn: walletApi.addPermission,
+    onSuccess: (data, variables) => {
+      debugger
+      const newPackage = data.permission;
+      const { purseList = [], ...rest } = profile ?? {};
+
+      // پیدا کردن کیف مورد نظر
+      const purseIndex = purseList.findIndex(p => p.id === variables.purseId);
+      if (purseIndex === -1) {
+        toast({
+          title: "خطا",
+          description: "کیف مورد نظر یافت نشد.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const currentPurse = purseList[purseIndex];
+      const updatedPurseList = [...purseList];
+debugger
+      // اگر بسته رایگان است
+      if (!newPackage.shortId) {
+        // بررسی وضعیت بسته فعال فعلی
+        const currentActivePackage = currentPurse.active;
+        let isActiveExpired = false;
+
+        if (currentActivePackage) {
+          const endDate = new Date(currentActivePackage.usageEnd);
+          // اضافه کردن یک روز به تاریخ پایان برای در نظر گرفتن کل روز آخر
+          endDate.setDate(endDate.getDate() + 1);
+          isActiveExpired = endDate < new Date();
+        }
+debugger
+        // اگر بسته فعال نداریم یا بسته فعلی منقضی شده
+        if (!currentActivePackage || isActiveExpired) {
+          // بسته جدید را به عنوان بسته فعال تنظیم می‌کنیم
+          updatedPurseList[purseIndex] = {
+            ...currentPurse,
+            active: newPackage,
+          };
+        } else {
+          debugger
+          // بسته جدید را به عنوان بسته رزرو تنظیم می‌کنیم
+          updatedPurseList[purseIndex] = {
+            ...currentPurse,
+            reserved: newPackage,
+          };
+        }
+debugger
+        // به‌روزرسانی پروفایل
+        setProfile({
+          ...rest,
+          purseList: updatedPurseList,
+        });
+
+        // اگر کیف فعلی همان کیفی است که بسته برای آن خریداری شده، آن را به‌روزرسانی کن
+        if (currentWallet?.id === variables.purseId) {
+          setCurrentWalletValue(updatedPurseList[purseIndex]);
+        }
+
+        // نمایش پیام موفقیت برای بسته رایگان
+        toast({
+          title: "موفقیت",
+          description: "بسته رایگان با موفقیت فعال شد.",
+        });
+      } else {
+        // برای بسته‌های پولی، فقط پیام موفقیت نمایش می‌دهیم
+        // به‌روزرسانی کیف بعد از پرداخت موفق انجام خواهد شد
+        toast({
+          title: "موفقیت",
+          description: "درخواست پرداخت با موفقیت ایجاد شد. لطفاً پرداخت را انجام دهید.",
+        });
+        replace(`/${newPackage.shortId}`);
+      }
+    },
+    onError: (error: any) => {
+      toast(error.getToast?.() ?? "خطا در خرید بسته");
+    },
+  });
+
+
+
+
   return {
     currentWallet,
     setCurrentWalletValue,
@@ -243,6 +337,11 @@ export const useWallet = () => {
     isErrorLandingPage: landingPageMutation.isError,
     errorLandingPage: landingPageMutation.error,
     isSuccessLandingPage: landingPageMutation.isSuccess,
+
+    addPermission: addPermissionMutation.mutate,
+    addPermissionAsync: addPermissionMutation.mutateAsync,
+    isAddingPermission: addPermissionMutation.isPending,
+    updateCioStatus,
 
     //list
     closeList,

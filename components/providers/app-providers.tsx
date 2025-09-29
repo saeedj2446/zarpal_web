@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react";
+import React, {useEffect} from "react";
 import type { ReactNode } from "react";
 import { Provider } from "react-redux"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
@@ -10,7 +10,9 @@ import { Toaster } from "../radix/toaster"
 import { ThemeProvider } from "../theme-provider"
 import { DirectionProvider } from "@radix-ui/react-direction"
 import TokenProvider from "@/components/providers/tokenProvider";
-import SessionProvider from "@/components/providers/sessionProvider"; // مسیر به AuthWrapper
+import SessionProvider from "@/components/providers/sessionProvider";
+import {setRouter} from "@/lib/utils/router";
+import {router} from "next/client"; // مسیر به AuthWrapper
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,6 +33,9 @@ interface AppProvidersProps {
 }
 
 export function AppProviders({ children }: AppProvidersProps) {
+  useEffect(() => {
+    setRouter(router);
+  }, [router]);
   return (
       <Provider store={store}>
         <QueryClientProvider client={queryClient}>

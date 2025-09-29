@@ -180,6 +180,10 @@ body {
 
 /*
 ############################Saeed Yousefi############################*/
+/* برداشتن اسکرول */
+html, body {
+  overflow-x: hidden;
+}
 
 /* styles/globals.css یا هر فایل CSS گلوبال شما */
 /* styles/globals.css یا فایل CSS گلوبال */

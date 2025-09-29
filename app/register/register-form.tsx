@@ -52,6 +52,7 @@ import jMoment from "moment-jalaali";
 import {generateMac} from "@/lib/utils/jwt/HashPass";
 import type {DtoIn_Password, RegisterUserReq} from "@/lib/types";
 import {Timer} from "@/components/common";
+import dayjs from "dayjs";
 
 type RegisterStep = 1 | 2 | 3;
 
@@ -237,12 +238,16 @@ export function RegisterForm() {
                             <FormItem>
                               <FormControl>
                                 <DateSelector
+                                    datePanel={false}
                                     {...field}
                                     placeholder="تاریخ تولد"
                                     className="w-full h-12 rounded-md text-right bg-white border border-gray-300"
-                                    onChange={field.onChange}
-                                    value={field.value}
-                                    format="YYYY/MM/DD"
+                                    onChange={v=>{
+                                      field.onChange(v)
+                                    }}
+                                    value={field.value} // پیش‌فرض روی 18 سال قبل
+                                    format="YYYY-MM-DD"
+                                    maxDate={dayjs().subtract(0, "day").toDate()} // حداکثر مجاز: 18 سال قبل
                                 />
                               </FormControl>
                               <FormMessage className="text-right text-red-500 text-sm" />

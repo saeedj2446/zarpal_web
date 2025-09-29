@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Card, CardContent, CardHeader } from "@/components/radix/card";
+import { Skeleton } from "@/components/radix/skeleton";
 
 const XFlatList = ({
                        data = [],
@@ -20,6 +22,7 @@ const XFlatList = ({
                        errorClassName = '',
                        loadMoreButtonClassName = '',
                        contentContainerStyle = {},
+                       skeletonCount = 10, // تعداد اسکلتون‌ها در زمان لودینگ
                    }) => {
     const observer = useRef();
 
@@ -72,12 +75,38 @@ const XFlatList = ({
         return null;
     };
 
-    // Render loading state
+    // Render loading state با استفاده از اسکلتون
     const renderLoading = () => {
         if (!loading) return null;
+
         return (
-            <div className={`flex justify-center py-6 ${loaderClassName}`}>
-                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+            <div className={`space-y-3 ${loaderClassName}`}>
+                {Array.from({ length: skeletonCount }).map((_, index) => (
+                    <Card key={index} className={`border border-gray-200 ${itemClassName}`}>
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-3">
+                                    <Skeleton className="h-4 w-4 rounded-full" />
+                                    <Skeleton className="h-4 w-24" />
+                                </div>
+                                <Skeleton className="h-6 w-16 rounded-full" />
+                            </div>
+
+                            <div className="flex items-center justify-between mb-2">
+                                <Skeleton className="h-4 w-32" />
+                                <Skeleton className="h-6 w-20" />
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1">
+                                    <Skeleton className="h-3 w-3" />
+                                    <Skeleton className="h-3 w-40" />
+                                </div>
+                                <Skeleton className="h-3 w-16" />
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
             </div>
         );
     };
@@ -86,21 +115,23 @@ const XFlatList = ({
     const renderError = () => {
         if (!error) return null;
         return (
-            <div className={`text-center py-6 text-red-500 ${errorClassName}`}>
-                <div className="flex justify-center mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                </div>
-                <p className="font-medium">خطا در بارگذاری داده‌ها</p>
-                <p className="text-sm mt-1">{error.message || error}</p>
-                <button
-                    onClick={onLoadMore}
-                    className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
-                >
-                    تلاش مجدد
-                </button>
-            </div>
+            <Card className={`border border-red-200 bg-red-50 ${errorClassName}`}>
+                <CardContent className="text-center py-6">
+                    <div className="flex justify-center mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <p className="font-medium text-red-700">خطا در بارگذاری داده‌ها</p>
+                    <p className="text-sm mt-1 text-red-600">{error.message || error}</p>
+                    <button
+                        onClick={onLoadMore}
+                        className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
+                    >
+                        تلاش مجدد
+                    </button>
+                </CardContent>
+            </Card>
         );
     };
 
@@ -141,13 +172,13 @@ const XFlatList = ({
             {data.length > 0 && (
                 <div className="space-y-3">
                     {data.map((item, index) => (
-                        <div
+                        <Card
                             key={keyExtractor ? keyExtractor(item, index) : index}
                             ref={index === data.length - 1 ? lastItemRef : null}
-                            className={`p-4 bg-white rounded-lg shadow ${itemClassName}`}
+                            className={`border border-gray-200 px-4 ${itemClassName}`}
                         >
                             {renderItem(item, index)}
-                        </div>
+                        </Card>
                     ))}
                 </div>
             )}

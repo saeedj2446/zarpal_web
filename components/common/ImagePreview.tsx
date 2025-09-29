@@ -5,13 +5,37 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Trash2, ZoomIn, Loader2, ImageOff } from 'lucide-react';
 import { useFile } from '@/lib/hooks/useFile';
 import { encodeBase64 } from '@/lib/utils/utils';
+import { cn } from '@/lib/utils/utils';
 
 interface ImagePreviewProps {
     fileId: number | null;
-    onDelete: () => void;
+    className?: string;
+    imageClassName?: string;
+    containerClassName?: string;
+    width?: number | string;
+    height?: number | string;
+    aspectRatio?: 'square' | 'video' | 'auto' | number;
+    rounded?: boolean | string;
+    zoomable?: boolean;
+    zoomModalClassName?: string;
+    loadingComponent?: React.ReactNode;
+    errorComponent?: React.ReactNode;
 }
 
-export function ImagePreview({ fileId, onDelete }: ImagePreviewProps) {
+export function ImagePreview({
+                                 fileId,
+                                 className,
+                                 imageClassName,
+                                 containerClassName,
+                                 width = '100%',
+                                 height,
+                                 aspectRatio = 'square',
+                                 rounded = false,
+                                 zoomModalClassName,
+                                 loadingComponent,
+                                 errorComponent,
+                                 zoomable=false
+                             }: ImagePreviewProps) {
     const [isZoomed, setIsZoomed] = useState(false);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [error, setError] = useState(false);
@@ -44,49 +68,81 @@ export function ImagePreview({ fileId, onDelete }: ImagePreviewProps) {
         fetchFromServer();
     }, [fileId, fetchFile]);
 
+    // محاسبه کلاس‌های مربوط به گردی و نسبت تصویر
+    const getAspectRatioClass = () => {
+        switch (aspectRatio) {
+            case 'square':
+                return 'aspect-square';
+            case 'video':
+                return 'aspect-video';
+            case 'auto':
+                return '';
+            default:
+                if (typeof aspectRatio === 'number') {
+                    return `aspect-[${aspectRatio}]`;
+                }
+                return 'aspect-square';
+        }
+    };
+
+    const getRoundedClass = () => {
+        if (rounded === true) {
+            return 'rounded-lg';
+        } else if (typeof rounded === 'string') {
+            return rounded;
+        }
+        return '';
+    };
+
     if (isFetchingFile) {
+        if (loadingComponent) {
+            return <>{loadingComponent}</>;
+        }
         return (
-            <Card className="flex items-center justify-center h-64">
-                <CardContent className="flex flex-col items-center justify-center">
+            <div className={cn("flex items-center justify-center", getRoundedClass(), className)} style={{ width, height }}>
+                <div className="flex flex-col items-center justify-center w-full h-full">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </CardContent>
-            </Card>
+                </div>
+            </div>
         );
     }
 
     if (error || !previewUrl) {
+        if (errorComponent) {
+            return <>{errorComponent}</>;
+        }
         return (
-            <Card className="flex items-center justify-center h-64 border border-dashed border-gray-300 dark:border-gray-600">
-                <CardContent className="flex flex-col items-center justify-center">
+            <div className={cn("flex items-center justify-center border border-dashed border-gray-300 dark:border-gray-600", getRoundedClass(), className)} style={{ width, height }}>
+                <div className="flex flex-col items-center justify-center w-full h-full">
                     <div className="bg-gray-100 dark:bg-gray-800 rounded-full p-4">
                         <ImageOff className="h-10 w-10 text-gray-400 dark:text-gray-500" />
                     </div>
-                </CardContent>
-            </Card>
+                </div>
+            </div>
         );
     }
 
     return (
         <>
-            <Card className="group relative overflow-hidden border dark:border-gray-700">
-                <CardContent className="p-0">
-                    <div className="relative aspect-square w-full">
-                        <img
-                            src={previewUrl}
-                            alt="Preview"
-                            className="w-full h-full object-cover transition-transform group-hover:scale-105 cursor-pointer"
-                            onClick={() => setIsZoomed(true)}
-                        />
+            <div className={cn("group relative overflow-hidden border dark:border-gray-700", getRoundedClass(), className)} style={{ width, height }}>
+                <div
+                    className={cn("relative w-full h-full overflow-hidden", getAspectRatioClass(), containerClassName)}>
+
+                    <img
+                        src={previewUrl}
+                        alt="Preview"
+                        className={cn("w-full h-full object-cover transition-transform group-hover:scale-105 cursor-pointer", imageClassName)}
+                        onClick={() => setIsZoomed(true)}
+                    />
 
 
-                    </div>
-                </CardContent>
-            </Card>
+                </div>
+            </div>
 
             {/* Zoom Modal */}
-            {isZoomed && (
+            {isZoomed && zoomable && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+                    className={cn("fixed inset-0 z-50 flex items-center justify-center bg-black/90", zoomModalClassName)}
                     onClick={() => setIsZoomed(false)}
                 >
                     <div className="relative max-h-[90vh] max-w-[90vw]">

@@ -17,9 +17,10 @@ interface DateSelectorProps
     lang?: "fa" | "en" | "ar";
     className?: string;
     placeholder?: string;
-    value?: string; // میلادی ISO مثل "2025-09-07"
-    onChange?: (val: string | null) => void; // خروجی میلادی ISO
-    clearable?: boolean; // آیا دکمه حذف نمایش داده شود؟
+    value?: string;
+    onChange?: (val: string | null) => void;
+    clearable?: boolean;
+    format?: string; // ⬅️ فرمت خروجی از بیرون
 }
 
 const DateSelector: React.FC<DateSelectorProps> = ({
@@ -28,7 +29,8 @@ const DateSelector: React.FC<DateSelectorProps> = ({
                                                        placeholder = "",
                                                        value,
                                                        onChange,
-                                                       clearable = true, // به طور پیش‌فرض دکمه حذف نمایش داده می‌شود
+                                                       clearable = true,
+                                                       format = "YYYY-MM-DD", // ⬅️ مقدار پیش‌فرض
                                                        ...props
                                                    }) => {
     const getCalendarConfig = () => {
@@ -44,38 +46,35 @@ const DateSelector: React.FC<DateSelectorProps> = ({
 
     const { calendar, locale } = getCalendarConfig();
 
-    // تابع برای تبدیل تاریخ ISO به DateObject با در نظر گرفتن زمان محلی
+    // مقدار اولیه
     const parseISODate = (isoDate: string) => {
         const localDate = new Date(isoDate);
         return new DateObject({
             year: localDate.getFullYear(),
             month: localDate.getMonth() + 1,
             day: localDate.getDate(),
-            hour: localDate.getHours(),      // اضافه شده
-            minute: localDate.getMinutes(),  // اضافه شده
-            second: localDate.getSeconds(),  // اگر لازم است
+            hour: localDate.getHours(),
+            minute: localDate.getMinutes(),
+            second: localDate.getSeconds(),
             calendar: gregorian,
-            locale: gregorian_en
+            locale: gregorian_en,
         });
     };
 
-    // تابع برای تبدیل DateObject به تاریخ ISO
-    const convertToISO = (dateObj: DateObject) => {
+    // تابع تبدیل خروجی بر اساس format
+    const convertToFormatted = (dateObj: DateObject) => {
         const gregorianDate = dateObj.convert(gregorian);
         const date = new Date(
             gregorianDate.year,
             gregorianDate.month - 1,
             gregorianDate.day,
-            gregorianDate.hour || 0,      // اضافه شده
-            gregorianDate.minute || 0,    // اضافه شده
-            gregorianDate.second || 0     // اضافه شده
+            gregorianDate.hour || 0,
+            gregorianDate.minute || 0,
+            gregorianDate.second || 0
         );
-
-        //return date.toISOString(); // خروجی شامل ساعت و دقیقه و ثانیه
-        return jMoment(date).format("YYYY-MM-DD HH:mm:ss")
+        return jMoment(date).format(format); // ⬅️ فرمت داینامیک
     };
 
-    // تابع برای حذف تاریخ
     const handleClear = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
@@ -90,23 +89,17 @@ const DateSelector: React.FC<DateSelectorProps> = ({
                 locale={locale}
                 placeholder={placeholder}
                 inputClass={`w-full h-12 px-4 pr-10 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${className}`}
-                containerClassName="w-full"
+                containerClassName="w-full z-[99999]"
                 calendarPosition="bottom-right"
-                // نمایش مقدار اولیه با در نظر گرفتن زمان محلی
-                value={
-                    value
-                        ? parseISODate(value).convert(calendar)
-                        : null
-                }
-                // خروجی: همیشه میلادی ISO با در نظر گرفتن زمان محلی
+                value={value ? parseISODate(value).convert(calendar) : null}
                 onChange={(dateObj) => {
                     if (!dateObj) {
                         onChange?.(null);
                         return;
                     }
+                    const formatted = convertToFormatted(dateObj as DateObject);
 
-                    const isoDate = convertToISO(dateObj as DateObject);
-                    onChange?.(isoDate);
+                    onChange?.(formatted);
                 }}
             />
             {value && clearable && (

@@ -94,7 +94,7 @@ export const LimitFunctionTitle: Record<LimitFunction, string> = {
 export type LimitPeriod = "Forb" | "Trnx" | "Daily";
 export const LimitPeriodTitle: Record<LimitPeriod, string> = {
   Forb: "ممنوع",
-  Trnx: "تراکنش",
+  Trnx: "درخواست",
   Daily: "روزانه",
 };
 
@@ -156,7 +156,6 @@ export interface Dto_Response {
   responseText:string
 }
 export interface DtoOut_Response {
-  sessionId: string
   encPassword: string
   clientTime: string
 }
@@ -215,18 +214,6 @@ export interface Dto_Limit {
 }
 
 
-// ----------------- Dto_Permition -----------------
-
-
-
-export interface Dto_Permition {
-  createdOn: string;         // Timestamp (M) → زمان ایجاد
-  usageStart?: string;       // Date (O) → تاریخ شروع
-  usageEnd?: string;         // Date (O) → تاریخ پایان
-  paymentType?: PaymentType; // Char (O) → نوع پرداخت
-  packageId: number;         // Long (M) → شناسه بسته
-  packageTitle: string;      // Text(128) (M) → عنوان بسته
-}
 
 // ----------------- Dto_Purse -----------------
 
@@ -298,7 +285,7 @@ export interface DtoIn_loginStatic {
 }
 
 export interface DtoOutLoginStatic {
-  sessionId: string;       // 6 بایت
+  //sessionId: string;       // 6 بایت
   passChange?: boolean;        // اختیاری، پیش‌فرض false
   userProfile?: Dto_UserProfile[]; // اختیاری
 }
@@ -465,7 +452,7 @@ export interface DtoOut_File {
 
 // ----------------- DtoIn_PurseInfo -----------------
 export interface DtoIn_PurseInfo {
-  sessionId: string;    // Byte(6) (M) → شناسه جلسه کاری
+  //sessionId: string;    // Byte(6) (M) → شناسه جلسه کاری
   purse: Dto_Purse;     // Dto_Purse[I] (M) → مشخصات کیف
 }
 
@@ -488,7 +475,7 @@ export interface Dto_Response {
 
 // ورودی سرویس اول: ست کردن فیلترها
 export interface DtoIn_filterReqi {
-  sessionId: string; // Byte(6)
+  //sessionId: string; // Byte(6)
   filter: Dto_filterReqi;
   order?: Dto_ListOrder[];
 }
@@ -525,7 +512,7 @@ export interface DtoOut_ListRequest {
 
 // ورودی سرویس دوم: گرفتن لیست
 export interface DtoIn_ListGet {
-  sessionId: string; // Byte(6)
+  //sessionId: string; // Byte(6)
   listId: number;    // Short
   page: number;      // Short
 }
@@ -552,6 +539,55 @@ export interface Dto_Reqi {
   expiredOn?: string; // Timestamp
   locX?: number; // Float
   locY?: number; // Float
+}
+
+
+
+// ----------------- Dto_Permition -----------------
+
+
+
+export interface Dto_Permition {
+  createdOn: string;         // Timestamp (M) → زمان ایجاد
+  usageStart?: string;       // Date (O) → تاریخ شروع
+  usageEnd?: string;         // Date (O) → تاریخ پایان
+  paymentType?: PaymentType; // Char (O) → نوع پرداخت
+  packageId: number;         // Long (M) → شناسه بسته
+  packageTitle: string;      // Text(128) (M) → عنوان بسته
+}
+// Type definitions for the addPermission service
+export type DtoIn_addPermission = {
+  purseId: string;         // PurseId - represented as string
+  packageId: number;       // Short (16-bit integer)
+};
+
+
+
+export type DtoOut_addPermission = {
+  permission: Dto_Permition;  // Permission information
+  reference?: string;         // Payment reference ID (optional - absent for free packages)
+  shortId?: string;          // Short link code (optional - absent for free packages)
+  response: Dto_Response;    // Standard response object
+};
+
+// src/lib/types/packageTypes.ts
+
+export interface DtoIn_Purse {
+  purse: string;           // PurseId - represented as string
+}
+
+export interface Dto_Pack {
+  id: number;             // Short
+  title: string;          // Text(128)
+  duration?: number;      // Short - Optional
+  price?: number;        // Money - Optional
+  desc?: string;         // Text(256) - Optional
+  levelId: number;       // Short
+}
+
+export interface DtoOut_PackList {
+  list: Dto_Pack[];
+  response: Dto_Response; // Standard response object
 }
 
 

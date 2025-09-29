@@ -78,7 +78,7 @@ export const useReqiList = (
         }
     }, [cacheKey]);
 
-    // 🔹 Query برای گرفتن لیست تراکنش‌ها
+    // 🔹 Query برای گرفتن لیست درخواست‌ها
     const listQuery = useQuery<DtoOut_listReqi>({
         queryKey: ["reqiListGet", listId, page],
         queryFn: () => {

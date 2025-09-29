@@ -65,19 +65,20 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 interface AccountEditProps {
-    account: any;
     isNewAccount: boolean;
     onSave: (data: any) => void;
     onCancel: () => void;
     isSubmitting?: boolean;
 }
 
-const AccountEdit = ({ account, isNewAccount, onSave, onCancel, isSubmitting = false }: AccountEditProps) => {
-    // حذف استفاده از isAddingPurse در این کامپوننت چون مستقیماً از هوک استفاده می‌کنیم
+const AccountEdit = ({ isNewAccount, onSave, onCancel, isSubmitting = false }: AccountEditProps) => {
+    // استفاده مستقیم از هوک useWallet برای دسترسی به کیف فعلی
+    const { currentWallet } = useWallet();
+    const account = currentWallet;
 
     // تنظیم مقادیر پیش‌فرض بر اساس حالت ایجاد یا ویرایش
     const defaultValues: FormData = React.useMemo(() => {
-        if (account) {
+        if (account && !isNewAccount) {
             return {
                 title: account.title || "",
                 currency: account.currency || "",
@@ -103,7 +104,7 @@ const AccountEdit = ({ account, isNewAccount, onSave, onCancel, isSubmitting = f
                 guildId: null,
             };
         }
-    }, [account]);
+    }, [account, isNewAccount]);
 
     const form = useForm<FormData>({
         resolver: zodResolver(schema),
@@ -112,6 +113,13 @@ const AccountEdit = ({ account, isNewAccount, onSave, onCancel, isSubmitting = f
     });
 
     const watchedValues = useWatch({ control: form.control });
+
+    // ریست کردن فرم هنگام تغییر حالت از ویرایش به ایجاد
+    useEffect(() => {
+        if (isNewAccount) {
+            form.reset(defaultValues);
+        }
+    }, [isNewAccount, form, defaultValues]);
 
     // بررسی تغییرات فرم
     const [hasChanges, setHasChanges] = React.useState(false);
@@ -186,28 +194,26 @@ const AccountEdit = ({ account, isNewAccount, onSave, onCancel, isSubmitting = f
                         />
 
                         {/* رسته - فقط در حالت ویرایش نمایش داده می‌شود */}
-                        {!isNewAccount && (
-                            <FormField
-                                control={form.control}
-                                name="guildId"
-                                render={({ field, fieldState }) => (
-                                    <FormItem>
-                                        <FormControl>
-                                            <DropSelector
-                                                {...field}
-                                                placeholder="رسته خود را انتخاب کنید"
-                                                options={BusinessCategories}
-                                                onChange={(val) => field.onChange(val)}
-                                                disabled={isSubmitting}
-                                            />
-                                        </FormControl>
-                                        {fieldState.error && (
-                                            <FormMessage>{fieldState.error.message}</FormMessage>
-                                        )}
-                                    </FormItem>
-                                )}
-                            />
-                        )}
+                        <FormField
+                            control={form.control}
+                            name="guildId"
+                            render={({ field, fieldState }) => (
+                                <FormItem>
+                                    <FormControl>
+                                        <DropSelector
+                                            {...field}
+                                            placeholder="رسته خود را انتخاب کنید"
+                                            options={BusinessCategories}
+                                            onChange={field.onChange}
+                                            disabled={isSubmitting}
+                                        />
+                                    </FormControl>
+                                    {fieldState.error && (
+                                        <FormMessage>{fieldState.error.message}</FormMessage>
+                                    )}
+                                </FormItem>
+                            )}
+                        />
 
                         {/* لوگو و مجوز */}
                         <div className="flex flex-wrap gap-6">
@@ -224,7 +230,7 @@ const AccountEdit = ({ account, isNewAccount, onSave, onCancel, isSubmitting = f
                                                 height={120}
                                                 autoUpload
                                                 fileType="image/*"
-                                                onUploadComplete={(val) => field.onChange()}
+                                                onUploadComplete={field.onChange}
                                                 disabled={isSubmitting}
                                             />
                                         </FormControl>

@@ -1,10 +1,10 @@
 import {apiRequest} from "@/lib/api/apiRequest";
 import {
     DtoIn_filterReqi,
-    DtoIn_ListGet,
+    DtoIn_ListGet, DtoIn_Purse,
     DtoIn_ShortId,
     DtoOut_listReqi,
-    DtoOut_ListRequest,
+    DtoOut_ListRequest, DtoOut_PackList,
     DtoOut_Response
 } from "@/lib/types";
 
@@ -23,9 +23,15 @@ export const listApi = {
         });
     },
 
-    // سرویس دوم: گرفتن تراکنش‌ها
+    // سرویس دوم: گرفتن درخواست‌ها
     reqiListGet: async (data: DtoIn_ListGet): Promise<DtoOut_listReqi> => {
         return apiRequest("/reqiListGet", {
+            method: "POST",
+            data,
+        });
+    },
+    getProperPackList: async (data: DtoIn_Purse): Promise<DtoOut_PackList> => {
+        return apiRequest("/getProperPackList", {
             method: "POST",
             data,
         });

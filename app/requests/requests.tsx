@@ -1,3 +1,4 @@
+// app/requests/requests.tsx
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
@@ -11,9 +12,10 @@ import { DtoIn_filterReqi, Dto_ListOrder } from "@/lib/types";
 import { useReqiList } from "@/lib/hooks/useReqiList";
 import { useRouter } from "next/navigation";
 import RequestSortBar from "@/app/requests/RequestSortBar";
-import RequestFilterBarMobile from "@/app/requests/RequestFilterBarMobile";
-import RequestFilterBarDesktop from "@/app/requests/RequestFilterBarDesktop";
+import RequestFilterBarMobile from "@/app/requests/filter-bar/RequestFilterBarMobile";
+import RequestFilterBarDesktop from "@/app/requests/filter-bar/RequestFilterBarDesktop";
 import { XFlatList } from "@/components/common";
+import RequestDetail from "./RequestDetail";
 
 interface RequestProps {
   showAllTBtn?: boolean;
@@ -21,31 +23,42 @@ interface RequestProps {
   showFilter?: boolean;
   title?: string;
   maxPages?: number;
+  ListEmptyComponent:any
+  menuWidth:number // برای حل باگ فین نشدن و اسکرول نخوردن سورت بار با عرض بین 1200 تا 750
 }
 
-export default function Requests({ title = "", maxPages, showAllTBtn = false, showSort = true, showFilter = true }: RequestProps) {
+export default function Requests({menuWidth=0, title = "", maxPages, showAllTBtn = false, showSort = true, showFilter = true,ListEmptyComponent=null }: RequestProps) {
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("ALL");
   const { currentWallet } = useWallet();
   const [filter, setFilter] = useState<DtoIn_filterReqi | null>(null);
-  const [order, setOrder] = useState<Dto_ListOrder[]>([{ orderBy: "createdOn", direction: "D" }]);
+  const [order, setOrder] = useState<Dto_ListOrder[]>([]);
   const [page, setPage] = useState(1);
   const [allRequests, setAllRequests] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const router = useRouter();
 
-  // به‌روزرسانی فیلتر هنگام تغییر کیف فعلی
+
+
+
+  // در useEffect مربوط به تغییر کیف پول
   useEffect(() => {
     if (currentWallet?.id) {
       setFilter({ purse: currentWallet.id });
     } else {
       setFilter(null);
     }
-    // ریست کردن صفحه هنگام تغییر فیلتر
+
+    // ریست کردن تمام فیلترها و صفحه
     setPage(1);
     setAllRequests([]);
     setHasMore(true);
+    setOrder([]); // ریست کردن مرتب‌سازی
   }, [currentWallet]);
+
+
+
+
 
   // بررسی وضعیت کیف فعلی
   const walletStatus = currentWallet?.status;
@@ -114,22 +127,13 @@ export default function Requests({ title = "", maxPages, showAllTBtn = false, sh
   const keyExtractor = (item: any) => item.id;
 
   // کامپوننت برای نمایش وضعیت خالی
-  const ListEmptyComponent = (
+  const ListEmptyComponent_ = ListEmptyComponent || (
       <Card className="border-2 border-dashed border-gray-300 bg-gray-50">
         <CardContent className="flex flex-col items-center justify-center py-12">
           <div className="flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4">
             <Inbox className="w-8 h-8 text-blue-500" />
           </div>
-          <h3 className="text-xl font-bold text-gray-800 mb-2">درخواستی ثبت نشده</h3>
-          <p className="text-gray-600 text-center max-w-md mb-6">
-            هنوز هیچ درخواست پرداختی برای این کیف ثبت نشده است.
-          </p>
-          <Button
-              className="bg-[#a85a7a] hover:bg-[#96527a] text-white"
-              onClick={() => router.push("/request-payment")}
-          >
-            ایجاد اولین درخواست پرداخت
-          </Button>
+          <h3 className="text-sm font-bold text-gray-800 mb-2">درخواستی وجود ندارد</h3>
         </CardContent>
       </Card>
   );
@@ -138,16 +142,14 @@ export default function Requests({ title = "", maxPages, showAllTBtn = false, sh
   const ListHeaderComponent = showSort && filter ? (
       <RequestSortBar
           onChange={(newOrder) => {
-            let nOrder = newOrder.length ? newOrder : [{
-              orderBy: "createdOn",
-              direction: "D"
-            }];
-            setOrder(nOrder);
+            setOrder(newOrder.length ? newOrder : []);
             setPage(1);
             setAllRequests([]);
           }}
+          className={showFilter?"":""} // <- اینجا
       />
   ) : null;
+
 
   // کامپوننت برای فوتر لیست
   const ListFooterComponent = showAllTBtn && allRequests.length > 0 ? (
@@ -162,73 +164,13 @@ export default function Requests({ title = "", maxPages, showAllTBtn = false, sh
       </div>
   ) : null;
 
-  // نمایش جزئیات تراکنش انتخاب شده
+  // نمایش جزئیات درخواست انتخاب شده
   if (selectedRequest) {
     return (
-        <Card className="flex flex-1 bg-white shadow-lg">
-          <CardHeader className="pb-4 flex items-center justify-between">
-            <CardTitle className="text-lg">جزئیات تراکنش</CardTitle>
-            <Button
-                variant="ghost"
-                onClick={() => setSelectedRequest(null)}
-                className="text-gray-500"
-            >
-              بازگشت
-            </Button>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm text-gray-600">شناسه تراکنش</label>
-                <p className="font-medium">{selectedRequest.id}</p>
-              </div>
-              <div>
-                <label className="text-sm text-gray-600">مبلغ</label>
-                <p className="font-medium text-lg">{selectedRequest.amount} ریال</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm text-gray-600">نام پرداخت کننده</label>
-                <p className="font-medium">{selectedRequest.payerTitle}</p>
-              </div>
-              <div>
-                <label className="text-sm text-gray-600">شماره تماس</label>
-                <p className="font-medium">{selectedRequest.payerContact}</p>
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm text-gray-600">توضیحات</label>
-              <p className="font-medium">{selectedRequest.desc}</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm text-gray-600">تاریخ ثبت</label>
-                <p className="font-medium">
-                  {dayjs(selectedRequest.createdOn).format("YYYY/MM/DD HH:mm")}
-                </p>
-              </div>
-              <div>
-                <label className="text-sm text-gray-600">تاریخ انقضا</label>
-                <p className="font-medium">
-                  {selectedRequest.expiredOn
-                      ? dayjs(selectedRequest.expiredOn).format("YYYY/MM/DD HH:mm")
-                      : "-"}
-                </p>
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm text-gray-600">وضعیت</label>
-              <Badge className={`${getStatusColor(selectedRequest.status)} mt-1`}>
-                {getStatusText(selectedRequest.status)}
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
+        <RequestDetail
+            transaction={selectedRequest}
+            onClose={() => setSelectedRequest(null)}
+        />
     );
   }
 
@@ -272,16 +214,16 @@ export default function Requests({ title = "", maxPages, showAllTBtn = false, sh
     );
   }
 
-  // نمایش لیست تراکنش‌ها
+  // نمایش لیست درخواست‌ها
   return (
       <div>
         {title && (
-            <div className="px-4 pb-6 mt-12 text-center">
+            <div className="px-4 pb-4 mt-6 text-center">
               {title}
             </div>
         )}
 
-        <div className="flex flex-col md:flex-row gap-4 max-w-4xl">
+        <div className="flex flex-col md:flex-row mt-2 justify-center">
 
           {/* فیلتر دسکتاپ */}
           {showFilter && filter && (
@@ -304,14 +246,11 @@ export default function Requests({ title = "", maxPages, showAllTBtn = false, sh
           {showFilter && filter && (
               <div className="md:hidden">
                 <RequestFilterBarMobile
-                    onChange={({ filter: newFilter, order: newOrder }) => {
+                    onChange={({ filter: newFilter }) => {
                       setFilter({
                         ...newFilter,
                         purse: currentWallet?.id,
                       });
-                      setOrder(
-                          newOrder.length ? newOrder : [{ orderBy: "createdOn", direction: "D" }]
-                      );
                       setPage(1);
                       setAllRequests([]);
                     }}
@@ -319,9 +258,10 @@ export default function Requests({ title = "", maxPages, showAllTBtn = false, sh
               </div>
           )}
 
-          {/* لیست تراکنش‌ها */}
-          <Card className="flex-1 bg-white shadow-lg">
-            <CardContent>
+          {/* لیست درخواست‌ها */}
+
+          <Card className="flex-1 bg-white shadow-lg max-w-[650px]">
+            <CardContent >
               <XFlatList
                   maxPages={maxPages}
                   data={allRequests}
@@ -362,7 +302,7 @@ export default function Requests({ title = "", maxPages, showAllTBtn = false, sh
                       </div>
                   )}
                   keyExtractor={keyExtractor}
-                  ListEmptyComponent={ListEmptyComponent}
+                  ListEmptyComponent={ListEmptyComponent_}
                   ListHeaderComponent={ListHeaderComponent}
                   ListFooterComponent={ListFooterComponent}
                   loading={isLoading || isFilterLoading}

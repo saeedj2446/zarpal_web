@@ -8,36 +8,27 @@ import Link from "next/link";
 import AccountSlider from "./account-slider";
 import AccountForm from "./account-form";
 import PackageSlider from "./package-slider";
-import { setCurrentWallet } from "@/lib/store/slices/walletSlice";
 import { useWallet } from "@/lib/hooks/useWallet";
 
 export default function AccountManagementComponent() {
     const { currentWallet } = useWallet();
-    const [selectedAccount, setSelectedAccount] = useState(currentWallet);
     const [isNewAccount, setIsNewAccount] = useState(false);
-    const [newAccountId, setNewAccountId] = useState<string | null>(null); // شناسه حساب جدید
-
-    const handleAccountSelect = (account) => {
-        setIsNewAccount(false);
-        setSelectedAccount(account);
-    };
+    const [newAccountId, setNewAccountId] = useState<string | null>(null);
 
     const handleCreateNewAccount = () => {
         setIsNewAccount(true);
-        setSelectedAccount(null);
-        setNewAccountId(null); // ریست شناسه حساب جدید
+        setNewAccountId(null);
     };
 
     const handleCancelNewAccount = () => {
         setIsNewAccount(false);
-        setSelectedAccount(currentWallet);
-        setNewAccountId(null); // ریست شناسه حساب جدید
+        setNewAccountId(null);
     };
 
     // پس از ایجاد حساب جدید، شناسه آن را تنظیم کن
     const handleAccountCreated = (accountId: string) => {
         setNewAccountId(accountId);
-        setIsNewAccount(false); // خروج از حالت ایجاد حساب
+        setIsNewAccount(false);
     };
 
     return (
@@ -60,16 +51,13 @@ export default function AccountManagementComponent() {
             {/* Account Slider - فقط در حالت غیر از ایجاد حساب جدید نمایش داده می‌شود */}
             {!isNewAccount && (
                 <div className="py-8">
-                    <AccountSlider
-                        onChange={handleAccountSelect}
-                    />
+                    <AccountSlider />
                 </div>
             )}
 
             {/* Account Form */}
             <div className="max-w-[700px] mx-auto px-4">
                 <AccountForm
-                    selectedAccount={selectedAccount}
                     isNewAccount={isNewAccount}
                     onCancelNewAccount={handleCancelNewAccount}
                     onAccountCreated={handleAccountCreated}

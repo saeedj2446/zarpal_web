@@ -15,6 +15,7 @@ export interface FileUploadCardProps {
     onFileSelect?: (file: string) => void;
     value?: number | null;
     name?: string;
+    disabled?: boolean; // پراپ جدید برای غیرفعال‌سازی
 }
 
 const FileUploader: React.FC<FileUploadCardProps> = ({
@@ -28,6 +29,7 @@ const FileUploader: React.FC<FileUploadCardProps> = ({
                                                          label = "انتخاب فایل",
                                                          value,
                                                          name,
+                                                         disabled = false, // مقدار پیش‌فرض
                                                      }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [preview, setPreview] = useState<string | null>(null);
@@ -46,7 +48,7 @@ const FileUploader: React.FC<FileUploadCardProps> = ({
                 } catch (err) {
                     console.error("❌ Error fetching file:", err);
                 }
-            }else{
+            } else {
                 setPreview(null)
             }
         };
@@ -56,6 +58,9 @@ const FileUploader: React.FC<FileUploadCardProps> = ({
 
     // ---- انتخاب فایل از سیستم ----
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        // اگر کامپوننت غیرفعال باشد، کاری انجام نده
+        if (disabled) return;
+
         const file = e.target.files?.[0];
         if (!file) return;
 
@@ -81,11 +86,17 @@ const FileUploader: React.FC<FileUploadCardProps> = ({
         reader.readAsDataURL(file);
     };
 
-    const triggerFileSelect = () => fileInputRef.current?.click();
+    const triggerFileSelect = () => {
+        // اگر کامپوننت غیرفعال باشد، پنجره انتخاب فایل باز نشود
+        if (disabled) return;
+        fileInputRef.current?.click();
+    };
 
     return (
         <div
-            className={`bg-white shadow-md rounded-xl flex flex-col items-center justify-center p-2 relative overflow-hidden cursor-pointer ${className}`}
+            className={`bg-white shadow-md rounded-xl flex flex-col items-center justify-center p-2 relative overflow-hidden cursor-pointer ${
+                disabled ? 'opacity-50 cursor-not-allowed' : ''
+            } ${className}`}
             style={{ width, height }}
             onClick={triggerFileSelect}
         >
@@ -96,6 +107,7 @@ const FileUploader: React.FC<FileUploadCardProps> = ({
                 className="hidden"
                 onChange={handleFileChange}
                 name={name}
+                disabled={disabled} // غیرفعال کردن input فایل
             />
 
             {/* لودینگ در حالت دانلود از سرور */}
@@ -140,8 +152,8 @@ const FileUploader: React.FC<FileUploadCardProps> = ({
                 </div>
             )}
 
-            {/* دکمه حذف */}
-            {preview && !isUploadingFile && (
+            {/* دکمه حذف - فقط در حالت غیرفعال نباشد نمایش داده شود */}
+            {preview && !isUploadingFile && !disabled && (
                 <button
                     type="button"
                     className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md hover:bg-gray-100 transition-colors"

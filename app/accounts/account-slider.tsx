@@ -39,7 +39,7 @@ export default function AccountSlider({ onChange}: AccountSliderProps) {
   const handleSlideChange = (swiper) => {
     const account = purseList[swiper.realIndex];
     setCurrentWalletValue(account); // تنظیم کیف فعلی
-    onChange(account);
+    onChange && onChange(account);
   };
 
   const getStatusColor = (status) => {
@@ -94,7 +94,7 @@ export default function AccountSlider({ onChange}: AccountSliderProps) {
                     <div className="mt-4 ">
 
                       <h2 className="text-base font-bold">
-                        {account.title.substring(0, 20)}
+                        {account.title.substring(0, 30)}
                       </h2>
                       <span className="text-base text-gray-600">
                                         شناسه: {account.id}

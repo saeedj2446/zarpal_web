@@ -64,6 +64,7 @@ export class ApiError extends Error {
 
     getToast(): ToastMessage {
         const code = String(this.code);
+        const message = String(this.message);
         switch (code) {
                 // ----------------------- HTTP استاندارد -----------------------
             case "400":
@@ -192,7 +193,7 @@ export class ApiError extends Error {
             case "33":
                 return {
                     title: "تعداد بیش از حد مجاز",
-                    description: `تعداد ${this?.data || "موارد"} بیش از حد مجاز است.`,
+                    description:message || `تعداد ${this?.data || "موارد"} بیش از حد مجاز است.`,
                     variant: "destructive",
                 };
             case "34":
