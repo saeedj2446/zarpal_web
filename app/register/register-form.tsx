@@ -53,6 +53,7 @@ import {generateMac} from "@/lib/utils/jwt/HashPass";
 import type {DtoIn_Password, RegisterUserReq} from "@/lib/types";
 import {Timer} from "@/components/common";
 import dayjs from "dayjs";
+import PersianDate from "@/components/common/PersianDate";
 
 type RegisterStep = 1 | 2 | 3;
 
@@ -237,6 +238,26 @@ export function RegisterForm() {
                         render={({ field }) => (
                             <FormItem>
                               <FormControl>
+                                <FormControl>
+                                  <PersianDate
+                                      value={field.value}
+                                      onChange={field.onChange}
+                                      placeholder="تاریخ تولد"
+                                      className="w-full"
+                                      maxDate={dayjs().subtract(18, 'year').format("YYYY-MM-DD")} // حداکثر مجاز: 18 سال قبل از امروز
+                                  />
+                                </FormControl>
+                              </FormControl>
+                              <FormMessage className="text-right text-red-500 text-sm" />
+                            </FormItem>
+                        )}
+                    />
+                    {/*<FormField
+                        control={stepOneForm.control}
+                        name="birthDate"
+                        render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
                                 <DateSelector
                                     datePanel={false}
                                     {...field}
@@ -253,7 +274,7 @@ export function RegisterForm() {
                               <FormMessage className="text-right text-red-500 text-sm" />
                             </FormItem>
                         )}
-                    />
+                    />*/}
                     <FormField
                         control={stepOneForm.control}
                         name="hostId"

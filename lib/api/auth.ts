@@ -4,7 +4,7 @@ import {
   DtoIn_Otp,
   DtoIn_Password,
   DtoOut_Response,
-  DtoOut_Session,
+  DtoOut_Session, DtoOut_UserProfile,
   DtoOutLoginStatic,
   RegisterUserReq,
 } from "../types"
@@ -75,6 +75,12 @@ export const authApi = {
 
   changePassword: async (data: ChangePasswordReq): Promise<DtoOut_Response> => {
     return apiRequest("/forgetPassword", {
+      method: "POST",
+      data,
+    });
+  },
+  refreshUserProfile: async (data: {}): Promise<DtoOut_UserProfile> => {
+    return apiRequest("/refreshUserProfile", {
       method: "POST",
       data,
     });

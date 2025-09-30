@@ -247,7 +247,10 @@ export interface Dto_Purse {
 
 // ----------------- Dto_UserProfile -----------------
 
-
+export  interface DtoOut_UserProfile{
+  userProfile:Dto_UserProfile,
+  response?: Dto_Response;
+}
 
 export interface Dto_UserProfile {
   fisrtName?: string;       // Text(128) (O) → نام
@@ -455,7 +458,10 @@ export interface DtoIn_PurseInfo {
   //sessionId: string;    // Byte(6) (M) → شناسه جلسه کاری
   purse: Dto_Purse;     // Dto_Purse[I] (M) → مشخصات کیف
 }
-
+export interface DtoOut_PurseInfo {
+  purse: Dto_Purse[];
+  response: Dto_Response; // Standard response object
+}
 // ----------------- DtoOut_Response -----------------
 export interface DtoOut_Response {
   response: Dto_Response;  // Dto_Response[O] (M) → پاسخ
@@ -589,6 +595,8 @@ export interface DtoOut_PackList {
   list: Dto_Pack[];
   response: Dto_Response; // Standard response object
 }
+
+
 
 
 

@@ -49,7 +49,9 @@ export const useAuth = () => {
 
   const startOtp = (seconds: number) => dispatch(startOtpTimer(seconds))
 
-  const setProfileValue = (u: typeof profile) => dispatch(setProfile(u))
+  const setProfileValue = (u: typeof profile) => {
+   return  dispatch(setProfile(u))
+  }
 
 
   const logoutState = useMutation({

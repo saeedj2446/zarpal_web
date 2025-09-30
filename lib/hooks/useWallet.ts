@@ -6,7 +6,7 @@ import { setCurrentWallet } from "@/lib/store/slices/walletSlice";
 import { walletApi } from "@/lib/api/wallet";
 import {
   DtoIn_cashInByOther,
-  DtoIn_landingPage, DtoIn_PurseInfo, DtoIn_ShortId,
+  DtoIn_landingPage, DtoIn_Purse, DtoIn_PurseInfo, DtoIn_ShortId, DtoOut_FinReq,
   DtoOut_landingPage, DtoOut_PurseInfo, DtoOut_Response,
 } from "@/lib/types";
 import jMoment from "moment-jalaali";
@@ -15,6 +15,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/lib/hooks/use-toast";
 import {useAuth} from "@/lib/hooks/useAuth";
 import {navigate, replace} from "@/lib/utils/router";
+import {authApi} from "@/lib/api/auth";
+
 
 export const useWallet = () => {
   const dispatch = useDispatch();
@@ -47,6 +49,7 @@ export const useWallet = () => {
       const updatedPurseList = [...purseList, newPurse];
 
       // به‌روزرسانی پروفایل کاربر
+
       setProfile({
         ...rest,
         purseList: updatedPurseList,
@@ -203,90 +206,119 @@ export const useWallet = () => {
       console.log(`[TEST] Updating CIO ${shortId} to status ${status}`);
       return Promise.resolve({ success: true });
     };
+// Add this mutation within the useWallet hook
 
-    // استفاده از mutation موجود برای خرید بسته
-  const addPermissionMutation = useMutation({
-    mutationFn: walletApi.addPermission,
-    onSuccess: (data, variables) => {
-      debugger
-      const newPackage = data.permission;
-      const { purseList = [], ...rest } = profile ?? {};
-
-      // پیدا کردن کیف مورد نظر
-      const purseIndex = purseList.findIndex(p => p.id === variables.purseId);
-      if (purseIndex === -1) {
-        toast({
-          title: "خطا",
-          description: "کیف مورد نظر یافت نشد.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      const currentPurse = purseList[purseIndex];
-      const updatedPurseList = [...purseList];
-debugger
-      // اگر بسته رایگان است
-      if (!newPackage.shortId) {
-        // بررسی وضعیت بسته فعال فعلی
-        const currentActivePackage = currentPurse.active;
-        let isActiveExpired = false;
-
-        if (currentActivePackage) {
-          const endDate = new Date(currentActivePackage.usageEnd);
-          // اضافه کردن یک روز به تاریخ پایان برای در نظر گرفتن کل روز آخر
-          endDate.setDate(endDate.getDate() + 1);
-          isActiveExpired = endDate < new Date();
-        }
-debugger
-        // اگر بسته فعال نداریم یا بسته فعلی منقضی شده
-        if (!currentActivePackage || isActiveExpired) {
-          // بسته جدید را به عنوان بسته فعال تنظیم می‌کنیم
-          updatedPurseList[purseIndex] = {
-            ...currentPurse,
-            active: newPackage,
-          };
-        } else {
-          debugger
-          // بسته جدید را به عنوان بسته رزرو تنظیم می‌کنیم
-          updatedPurseList[purseIndex] = {
-            ...currentPurse,
-            reserved: newPackage,
-          };
-        }
-debugger
-        // به‌روزرسانی پروفایل
-        setProfile({
-          ...rest,
-          purseList: updatedPurseList,
-        });
-
-        // اگر کیف فعلی همان کیفی است که بسته برای آن خریداری شده، آن را به‌روزرسانی کن
-        if (currentWallet?.id === variables.purseId) {
-          setCurrentWalletValue(updatedPurseList[purseIndex]);
-        }
-
-        // نمایش پیام موفقیت برای بسته رایگان
-        toast({
-          title: "موفقیت",
-          description: "بسته رایگان با موفقیت فعال شد.",
-        });
-      } else {
-        // برای بسته‌های پولی، فقط پیام موفقیت نمایش می‌دهیم
-        // به‌روزرسانی کیف بعد از پرداخت موفق انجام خواهد شد
-        toast({
-          title: "موفقیت",
-          description: "درخواست پرداخت با موفقیت ایجاد شد. لطفاً پرداخت را انجام دهید.",
-        });
-        replace(`/${newPackage.shortId}`);
-      }
+  const getWaitPermissionMutation = useMutation<
+      DtoOut_FinReq,
+      Error,
+      DtoIn_Purse
+  >({
+    mutationFn: (data: DtoIn_Purse) => walletApi.getWaitPermission(data),
+    onSuccess: (data) => {
+      console.log("Wait permission data:", data);
+      // You can add any success handling here if needed
     },
     onError: (error: any) => {
-      toast(error.getToast?.() ?? "خطا در خرید بسته");
+      //toast(error.getToast?.() ?? "خطا در دریافت اطلاعات مجوز");
     },
   });
 
 
+ //تازه سازی پروفایل
+  const refreshProfileMutation = useMutation({
+    mutationFn: () => authApi.refreshUserProfile({}),
+    onSuccess: (data) => {
+      dispatch(setProfile(data.userProfile));
+
+      // تعیین کیف جاری
+      let walletToSet = data.userProfile.purseList[0]; // پیش‌فرض اولین کیف
+
+
+      if (currentWallet) {
+        const found = data.userProfile.purseList.find(w => w.id === currentWallet.id);
+        if (found) walletToSet = found;
+      }
+
+      dispatch(setCurrentWallet({ currentWallet: walletToSet }));
+    },
+    onError: (error) => {
+      console.error("خطا در رفرش پروفایل کاربر:", error);
+      toast({
+        title: "خطا",
+        description: "خطا در به‌روزرسانی اطلاعات پروفایل",
+        variant: "destructive"
+      });
+    },
+  });
+
+  // استفاده از mutation موجود برای خرید بسته
+  const addPermissionMutation = useMutation({
+    mutationFn: walletApi.addPermission,
+    onSuccess: async (data, variables) => {
+      // اگر بسته رایگان است
+      if (!data.shortId) {
+        // رفرش پروفایل کاربر با میوتشن
+        await refreshProfileMutation.mutateAsync();
+
+        // نمایش پیام موفقیت برای بسته رایگان
+        toast({
+          title: "موفقیت",
+          description: "بسته رایگان با موفقیت رزرو شد.",
+        });
+      } else {
+        // برای بسته‌های پولی، همان رفتار قبلی حفظ می‌شود
+        toast({
+          title: "موفقیت",
+          description: "درخواست پرداخت با موفقیت ایجاد شد. لطفاً پرداخت را انجام دهید.",
+        });
+        replace(`/${data.shortId}`);
+      }
+    },
+    onError: (error: any) => {
+      if(error.code===33 && error.data==='wp'){
+        toast({
+          title: "ناموفق",
+          description: "شما یک پرداخت در حال انتظار دارید",
+          variant: "destructive"
+        });
+        refreshProfileMutation.mutateAsync();
+      }
+      if(error.code===33 && error.data==='permission'){
+        toast({
+          title: "ناموفق",
+          description: "شما هم بسته فعال دراید و هم بسته رزرو و امکان خرید بسته جدید ندارید",
+          variant: "destructive"
+        });
+        return;
+      }
+      toast(error.getToast?.() ?? "خطا در خرید بسته");
+    },
+  });
+
+  const revokePermissionMutation = useMutation({
+    mutationFn: (data: DtoIn_Purse) => walletApi.revokePermission(data),
+    onSuccess: async (data, variables) => {
+      // رفرش پروفایل کاربر با میوتشن
+      await refreshProfileMutation.mutateAsync();
+
+      // نمایش پیام موفقیت
+      toast({
+        title: "موفقیت",
+        description: "بسته با موفقیت ابطال شد.",
+      });
+    },
+    onError: (error: any) => {
+      if(error.code===12 && error.data==='permission'){
+        toast({
+          title: "ابطال ناموفق",
+          description: "برای ابطال بسته فعال، کیف باید بسته رزرو داشته باشد.",
+          variant: "destructive"
+        });
+      } else {
+        toast(error.getToast?.() ?? "خطا در ابطال بسته");
+      }
+    },
+  });
 
 
   return {
@@ -321,6 +353,8 @@ debugger
 
     denyLandingPage: denyLandingPageMutation.mutateAsync,
     isDenyingLandingPage: denyLandingPageMutation.isPending,
+    denyLandingPageError: denyLandingPageMutation.error,
+    denyLandingPageData: denyLandingPageMutation.data,
 
     // Cash In By Other
     cashInByOther: cashInByOtherMutation.mutateAsync,
@@ -345,5 +379,20 @@ debugger
 
     //list
     closeList,
+
+    getWaitPermission: getWaitPermissionMutation.mutateAsync,
+    isGettingWaitPermission: getWaitPermissionMutation.isPending,
+    getWaitPermissionError: getWaitPermissionMutation.error,
+    getWaitPermissionData: getWaitPermissionMutation.data,
+
+    revokePermission: revokePermissionMutation.mutateAsync,
+    isRevokingPermission: revokePermissionMutation.isPending,
+    revokePermissionError: revokePermissionMutation.error,
+    revokePermissionData: revokePermissionMutation.data,
+
+    refreshProfile: refreshProfileMutation.mutateAsync,
+    isRefreshingProfile: refreshProfileMutation.isPending,
+    refreshProfileError: refreshProfileMutation.error,
+    refreshProfileData: refreshProfileMutation.data,
   };
 };

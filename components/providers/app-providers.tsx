@@ -12,7 +12,8 @@ import { DirectionProvider } from "@radix-ui/react-direction"
 import TokenProvider from "@/components/providers/tokenProvider";
 import SessionProvider from "@/components/providers/sessionProvider";
 import {setRouter} from "@/lib/utils/router";
-import {router} from "next/client"; // مسیر به AuthWrapper
+import {useRouter} from "next/navigation";
+
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,6 +34,7 @@ interface AppProvidersProps {
 }
 
 export function AppProviders({ children }: AppProvidersProps) {
+  const router = useRouter();
   useEffect(() => {
     setRouter(router);
   }, [router]);
