@@ -6,7 +6,8 @@
     "b": "next build",
     "s": "next dev",
     "l": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "v": "vercel --prod"
   },
   "dependencies": {
     "@hookform/resolvers": "latest",

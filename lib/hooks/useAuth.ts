@@ -228,7 +228,7 @@ export const useAuth = () => {
 
       dispatch(setCurrentWallet({ currentWallet: walletToSet }));
       // ذخیره کیف انتخاب شده در localStorage برای persist
-      localStorage.setItem("currentWallet", JSON.stringify(walletToSet));
+      //localStorage.setItem("currentWallet", JSON.stringify(walletToSet));
 
       toast({
         title: "ورود موفق",
@@ -236,6 +236,7 @@ export const useAuth = () => {
       });
     },
     onError: (error: any) => {
+      console.log(111111111111111);
       console.log(error);
       toast(error.getToast());
     },

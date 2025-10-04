@@ -1,21 +1,23 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, {Suspense, useEffect, useState} from "react";
 import { CreditCard, ArrowLeft, Phone } from "lucide-react";
 import Link from "next/link";
 import { useWallet } from "@/lib/hooks/useWallet";
-import { useAuth } from "@/lib/hooks/useAuth"; // Added for user profile
+import { useAuth } from "@/lib/hooks/useAuth";
 import WalletSelector from "@/app/public/WalletSelector";
 import GoldRateBoard from "@/app/public/gold-rate-board";
-import dynamic from 'next/dynamic';
+import dynamic from "next/dynamic";
 
-// بارگذاری داینامیک کتابخانه QRCode برای جلوگیری از خطای SSR
-const QRCode = dynamic(() => import('qrcode.react'), { ssr: false });
+// بارگذاری داینامیک کتابخانه QRCode
+const QRCode = dynamic(
+    () => import("qrcode.react").then((mod) => mod.QRCodeCanvas),
+    { ssr: false }
+);
 
 // Radix
 import { Card, CardContent } from "@/components/radix/card";
 import { Input } from "@/components/radix/input";
-import { Textarea } from "@/components/radix/textarea";
 import { Button } from "@/components/radix/button";
 import {
     Form,
@@ -24,12 +26,25 @@ import {
     FormItem,
     FormMessage,
 } from "@/components/radix/form";
-import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogClose } from "@/components/radix/dialog";
+import {
+    Dialog,
+    DialogTrigger,
+    DialogContent as BaseDialogContent,
+    DialogTitle,
+    DialogDescription,
+    DialogClose,
+    DialogPortal,
+    DialogOverlay,
+} from "@/components/radix/dialog";
 
 import { useForm } from "react-hook-form";
 import DateSelector from "@/components/common/DateSelector";
 import { FloatingLabel, NumberInput } from "@/components/common";
-import { normalizeDate, normalizePhoneNumber, rial2Toman } from "@/lib/utils/utils";
+import {
+    normalizeDate,
+    normalizePhoneNumber,
+    rial2Toman,
+} from "@/lib/utils/utils";
 import { DateObject } from "react-multi-date-picker";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
@@ -37,46 +52,66 @@ import AnalogTimePicker from "react-multi-date-picker/plugins/analog_time_picker
 
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { ParamDetector } from "@/app/public/ParamDetector";
 
 // ----- Zod Schema -----
 const cashInByOtherSchema = z.object({
     payerContact: z.string().min(11, "شماره همراه معتبر نیست"),
     payerTitle: z.string().min(1, "عنوان الزامی است"),
-    amount: z.number({ invalid_type_error: "مبلغ باید عدد باشد" }).positive("مبلغ باید مثبت باشد"),
+    amount: z
+        .number({ invalid_type_error: "مبلغ باید عدد باشد" })
+        .positive("مبلغ باید مثبت باشد"),
     desc: z.string().optional(),
-    expiredOn: z.any().refine(v => !!v, "تاریخ الزامی است"),
+    expiredOn: z.any().refine((v) => !!v, "تاریخ الزامی است"),
+    sendSms: z.boolean().optional(),
 });
 
 export type CashInByOtherData = z.infer<typeof cashInByOtherSchema>;
 
+// ✅ نسخه سفارشی DialogContent
+// ✅ DialogContent سفارشی
+const DialogContent = React.forwardRef<
+    React.ElementRef<typeof BaseDialogContent>,
+    Omit<React.ComponentPropsWithoutRef<typeof BaseDialogContent>, "children"> & {
+    hideCloseButton?: boolean;
+    children?: React.ReactNode;
+}
+>(({ children, hideCloseButton, ...rest }, ref) => {
+    return (
+        <DialogPortal>
+            <DialogOverlay />
+            <BaseDialogContent ref={ref} {...rest}>
+                {children}
+                {!hideCloseButton && (
+                    <DialogClose className="absolute right-4 top-4">✕</DialogClose>
+                )}
+            </BaseDialogContent>
+        </DialogPortal>
+    );
+});
+
+DialogContent.displayName = "DialogContent";
+
+
 export default function RequestPaymentPage() {
     const { currentWallet, cashInByOtherMutation } = useWallet();
-    const { profile } = useAuth(); // Get user profile
+    const { profile } = useAuth();
     const [confirmModalOpen, setConfirmModalOpen] = useState(false);
     const [resultModalOpen, setResultModalOpen] = useState(false);
     const [formData, setFormData] = useState<CashInByOtherData | null>(null);
     const [paymentLink, setPaymentLink] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
-    const [paymentMethod, setPaymentMethod] = useState<'link' | 'qr' | 'self'>('link'); // Added 'self'
+    const [paymentMethod, setPaymentMethod] = useState<"link" | "qr" | "self">(
+        "link"
+    );
     const router = useRouter();
-    const searchParams = useSearchParams();
 
-    // دریافت پارامتر method از URL
-    useEffect(() => {
-        const method = searchParams.get('method');
-        if (method === 'qr' || method === 'link' || method === 'self') {
-            setPaymentMethod(method as 'link' | 'qr' | 'self');
+    const findPaymentMethod = (method: string) => {
+        if (method === "qr" || method === "link" || method === "self") {
+            setPaymentMethod(method as "link" | "qr" | "self");
         }
-    }, [searchParams]);
-
-    // Pre-fill form with user data for self payment
-    useEffect(() => {
-        if (paymentMethod === 'self' && profile) {
-            form.setValue("payerContact", profile.contact || "");
-            form.setValue("payerTitle", profile.fisrtName+ " "+profile.lastName || "");
-        }
-    }, [paymentMethod, profile]);
+    };
 
     const now = new Date();
     const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
@@ -100,6 +135,17 @@ export default function RequestPaymentPage() {
         mode: "all",
     });
 
+    // Pre-fill form with user data for self payment
+    useEffect(() => {
+        if (paymentMethod === "self" && profile) {
+            form.setValue("payerContact", profile.contact || "");
+            form.setValue(
+                "payerTitle",
+                `${profile.firstName ?? ""} ${profile.lastName ?? ""}`
+            );
+        }
+    }, [paymentMethod, profile]);
+
     useEffect(() => {
         if (defaultDate) {
             form.setValue("expiredOn", defaultDate, { shouldValidate: true });
@@ -119,11 +165,11 @@ export default function RequestPaymentPage() {
             amount: formData.amount,
             payerContact: normalizePhoneNumber(formData.payerContact),
             payerTitle: formData.payerTitle,
-            sendSms: paymentMethod === 'link', // فقط در حالت لینک پیامک ارسال شود
+            sendSms: paymentMethod === "link",
             desc: formData.desc,
             expiredOn: normalizeDate(formData.expiredOn),
             landingBase: "https://zarpal.vercel.app/p",
-            self: paymentMethod === 'self' // Added self parameter
+            self: paymentMethod === "self",
         };
 
         setLoading(true);
@@ -132,8 +178,7 @@ export default function RequestPaymentPage() {
             const link = location.origin + "/" + res.shortId;
             setPaymentLink(link);
 
-            // For self payment, redirect immediately
-            if (paymentMethod === 'self') {
+            if (paymentMethod === "self") {
                 router.push(link);
             } else {
                 setResultModalOpen(true);
@@ -147,20 +192,27 @@ export default function RequestPaymentPage() {
     };
 
     return (
+        <Suspense fallback={<div>در حال بارگذاری...</div>}>
         <div className="min-h-screen font-['iransans-number']">
+            <ParamDetector param="method" onDetect={findPaymentMethod} />
+
             {/* Header */}
             <div className="bg-[#a85a7a] text-white p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <CreditCard className="w-8 h-8" />
                 </div>
                 <div className="flex items-center gap-3">
-                    {searchParams.get('method')=="self"?"خرید طلا":"درخواست واریز"}                </div>
-                <Link href="/" className="p-2 rounded-full hover:bg-white/20 flex items-center justify-center">
+                    {paymentMethod == "self" ? "خرید طلا" : "درخواست واریز"}
+                </div>
+                <Link
+                    href="/"
+                    className="p-2 rounded-full hover:bg-white/20 flex items-center justify-center"
+                >
                     <ArrowLeft className="w-5 h-5" />
                 </Link>
             </div>
 
-            {/* Main Content */}
+            {/* Main */}
             <div className="max-w-[1000px] mx-auto p-4">
                 <WalletSelector />
                 <GoldRateBoard />
@@ -170,7 +222,10 @@ export default function RequestPaymentPage() {
                     <Card className="w-full max-w-lg bg-white shadow-md rounded-2xl px-1 py-6">
                         <CardContent>
                             <Form {...form}>
-                                <form onSubmit={form.handleSubmit(handleOpenConfirm)} className="space-y-4">
+                                <form
+                                    onSubmit={form.handleSubmit(handleOpenConfirm)}
+                                    className="space-y-4"
+                                >
                                     {/* شماره همراه */}
                                     <FormField
                                         control={form.control}
@@ -188,11 +243,13 @@ export default function RequestPaymentPage() {
                                                             maxLength={11}
                                                             className="w-full"
                                                             dir="rtl"
-                                                            readOnly={paymentMethod === 'self'} // Read-only for self payment
+                                                            readOnly={paymentMethod === "self"}
                                                         />
                                                     </FloatingLabel>
                                                 </FormControl>
-                                                <FormMessage className="text-right text-red-500 text-sm">{fieldState.error?.message}</FormMessage>
+                                                <FormMessage className="text-right text-red-500 text-sm">
+                                                    {fieldState.error?.message}
+                                                </FormMessage>
                                             </FormItem>
                                         )}
                                     />
@@ -204,15 +261,20 @@ export default function RequestPaymentPage() {
                                         render={({ field, fieldState }) => (
                                             <FormItem className="mt-6">
                                                 <FormControl>
-                                                    <FloatingLabel id="payerTitle" label="عنوان پرداخت کننده">
+                                                    <FloatingLabel
+                                                        id="payerTitle"
+                                                        label="عنوان پرداخت کننده"
+                                                    >
                                                         <Input
                                                             {...field}
                                                             className="w-full"
-                                                            readOnly={paymentMethod === 'self'} // Read-only for self payment
+                                                            readOnly={paymentMethod === "self"}
                                                         />
                                                     </FloatingLabel>
                                                 </FormControl>
-                                                <FormMessage className="text-right text-red-500 text-sm">{fieldState.error?.message}</FormMessage>
+                                                <FormMessage className="text-right text-red-500 text-sm">
+                                                    {fieldState.error?.message}
+                                                </FormMessage>
                                             </FormItem>
                                         )}
                                     />
@@ -225,15 +287,27 @@ export default function RequestPaymentPage() {
                                             <FormItem className="mt-6">
                                                 <FormControl>
                                                     <FloatingLabel id="amount" label="مبلغ">
-                                                        <NumberInput {...field} value={field.value ?? ""} className="w-full" unit="ریال" />
+                                                        <NumberInput
+                                                            {...field}
+                                                            value={field.value ?? ""}
+                                                            className="w-full"
+                                                            unit="ریال"
+                                                        />
                                                     </FloatingLabel>
                                                 </FormControl>
-                                                <FormMessage className="text-right text-red-500 text-sm">{fieldState.error?.message}</FormMessage>
-                                                {field.value && <div className="mt-1 text-gray-500 text-xs">{rial2Toman(field.value)} تومان</div>}
+                                                <FormMessage className="text-right text-red-500 text-sm">
+                                                    {fieldState.error?.message}
+                                                </FormMessage>
+                                                {field.value && (
+                                                    <div className="mt-1 text-gray-500 text-xs">
+                                                        {rial2Toman(field.value)} تومان
+                                                    </div>
+                                                )}
                                             </FormItem>
                                         )}
                                     />
 
+                                    {/* توضیحات */}
                                     <FormField
                                         control={form.control}
                                         name="desc"
@@ -244,18 +318,24 @@ export default function RequestPaymentPage() {
                                                         <Input {...field} className="w-full" />
                                                     </FloatingLabel>
                                                 </FormControl>
-                                                <FormMessage className="text-right text-red-500 text-sm">{fieldState.error?.message}</FormMessage>
+                                                <FormMessage className="text-right text-red-500 text-sm">
+                                                    {fieldState.error?.message}
+                                                </FormMessage>
                                             </FormItem>
                                         )}
                                     />
 
+                                    {/* تاریخ */}
                                     <FormField
                                         control={form.control}
                                         name="expiredOn"
                                         render={({ field, fieldState }) => (
                                             <FormItem className="mt-6">
                                                 <FormControl>
-                                                    <FloatingLabel id="expiredOn" label="تاریخ انقضای لینک پرداخت">
+                                                    <FloatingLabel
+                                                        id="expiredOn"
+                                                        label="تاریخ انقضای لینک پرداخت"
+                                                    >
                                                         <DateSelector
                                                             {...field}
                                                             className="peer w-full h-14 rounded-xl"
@@ -263,22 +343,33 @@ export default function RequestPaymentPage() {
                                                             value={field.value}
                                                             format="YYYY-MM-DD HH:mm"
                                                             plugins={[<AnalogTimePicker hideSeconds />]}
-                                                            minDate={new DateObject({ calendar: persian, locale: persian_fa })}
+                                                            minDate={
+                                                                new DateObject({
+                                                                    calendar: persian,
+                                                                    locale: persian_fa,
+                                                                })
+                                                            }
                                                         />
                                                     </FloatingLabel>
                                                 </FormControl>
-                                                <FormMessage className="text-right text-red-500 text-sm">{fieldState.error?.message}</FormMessage>
+                                                <FormMessage className="text-right text-red-500 text-sm">
+                                                    {fieldState.error?.message}
+                                                </FormMessage>
                                             </FormItem>
                                         )}
                                     />
 
                                     {/* Submit */}
-                                    <Button type="submit" disabled={loading} className="w-full bg-[#a85a7a] hover:bg-[#96527a] text-white py-6 text-lg font-medium rounded-xl">
+                                    <Button
+                                        type="submit"
+                                        disabled={loading}
+                                        className="w-full bg-[#a85a7a] hover:bg-[#96527a] text-white py-6 text-lg font-medium rounded-xl"
+                                    >
                                         {loading
                                             ? "در حال پردازش..."
-                                            : paymentMethod === 'link'
+                                            : paymentMethod === "link"
                                                 ? "ارسال لینک پرداخت"
-                                                : paymentMethod === 'qr'
+                                                : paymentMethod === "qr"
                                                     ? "تولید بارکد پرداخت"
                                                     : "خرید طلا"}
                                     </Button>
@@ -293,7 +384,9 @@ export default function RequestPaymentPage() {
             <Dialog open={confirmModalOpen} onOpenChange={setConfirmModalOpen}>
                 <DialogContent className="max-w-md mx-auto p-6 rounded-lg bg-white shadow-lg">
                     <DialogTitle>تایید اطلاعات</DialogTitle>
-                    <DialogDescription>لطفاً اطلاعات زیر را بررسی کنید و در صورت صحت، تایید نمایید.</DialogDescription>
+                    <DialogDescription>
+                        لطفاً اطلاعات زیر را بررسی کنید و در صورت صحت، تایید نمایید.
+                    </DialogDescription>
                     {formData && (
                         <div className="mt-4 space-y-2 text-right">
                             <p>شماره همراه: {formData.payerContact}</p>
@@ -304,7 +397,12 @@ export default function RequestPaymentPage() {
                         </div>
                     )}
                     <div className="mt-6 flex justify-between">
-                        <Button variant="secondary" onClick={() => setConfirmModalOpen(false)}>ویرایش</Button>
+                        <Button
+                            variant="secondary"
+                            onClick={() => setConfirmModalOpen(false)}
+                        >
+                            ویرایش
+                        </Button>
                         <Button onClick={handleConfirm} disabled={loading}>
                             {loading ? "در حال ارسال..." : "تایید و ارسال"}
                         </Button>
@@ -312,24 +410,26 @@ export default function RequestPaymentPage() {
                 </DialogContent>
             </Dialog>
 
-            {/* Modal نتیجه پرداخت (only for link/qr) */}
-            {paymentMethod !== 'self' && (
+            {/* Modal نتیجه پرداخت */}
+            {paymentMethod !== "self" && (
                 <Dialog open={resultModalOpen} onOpenChange={setResultModalOpen}>
-                    <DialogContent hideCloseButton className="max-w-md mx-auto p-6 rounded-lg bg-white shadow-lg">
+                    <DialogContent
+                        hideCloseButton
+                        className="max-w-md mx-auto p-6 rounded-lg bg-white shadow-lg"
+                    >
                         <DialogTitle className="px-3">
-                            {paymentMethod === 'link' ? "لینک پرداخت" : "بارکد پرداخت"}
+                            {paymentMethod === "link" ? "لینک پرداخت" : "بارکد پرداخت"}
                         </DialogTitle>
 
                         <DialogDescription>
-                            {paymentMethod === 'link'
+                            {paymentMethod === "link"
                                 ? "لینک پرداخت ایجاد و ارسال شد."
-                                : "بارکد پرداخت با موفقیت ایجاد شد."}
+                                : "برای پرداخت بارکد را اسکن کنید."}
                         </DialogDescription>
 
                         {paymentLink && (
                             <div className="mt-4 flex flex-col items-center space-y-4">
-                                {paymentMethod === 'link' ? (
-                                    // نمایش لینک در حالت عادی
+                                {paymentMethod === "link" ? (
                                     <a
                                         href={paymentLink}
                                         target="_blank"
@@ -338,19 +438,16 @@ export default function RequestPaymentPage() {
                                         {paymentLink}
                                     </a>
                                 ) : (
-                                    // نمایش بارکد در حالت QR
                                     <div className="flex flex-col items-center">
                                         <div className="p-2 bg-white border rounded-lg">
                                             <QRCode
                                                 value={paymentLink}
-                                                size={180}
+                                                size={280}
                                                 level="H"
                                                 includeMargin={true}
                                             />
                                         </div>
-                                        <p className="mt-2 text-sm text-gray-600">
-                                            با اسکن بارکد به صفحه پرداخت هدایت می‌شوید
-                                        </p>
+
                                     </div>
                                 )}
                             </div>
@@ -364,7 +461,7 @@ export default function RequestPaymentPage() {
                                 بستن
                             </Button>
 
-                            {paymentLink && paymentMethod === 'link' && (
+                            {paymentLink && paymentMethod === "link" && (
                                 <Button
                                     className="flex-1 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md"
                                     onClick={() => {
@@ -380,5 +477,6 @@ export default function RequestPaymentPage() {
                 </Dialog>
             )}
         </div>
+        </Suspense>
     );
 }

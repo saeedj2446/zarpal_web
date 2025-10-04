@@ -1,5 +1,3 @@
-// components/accounts/bank-simulation/BankSimulation.jsx
-
 "use client";
 
 import React, { useState } from "react";
@@ -15,36 +13,37 @@ const BankSimulation = () => {
     const [isProcessing, setIsProcessing] = useState(false);
     const { addPermissionAsync, updateCioStatus } = useWallet();
 
-    // دریافت پارامترهای از URL
-    const purseId = searchParams.get("purseId");
-    const packageId = searchParams.get("packageId");
-    const sessionId = searchParams.get("sessionId");
-    const reference = searchParams.get("reference");
-    const shortId = searchParams.get("shortId");
+    // دریافت پارامترها
+    const purseId = searchParams.get("purseId") ?? "";
+    const packageIdParam = searchParams.get("packageId");
+    const packageId = packageIdParam ? parseInt(packageIdParam, 10) : null;
+    const sessionId = searchParams.get("sessionId") ?? "";
+    const reference = searchParams.get("reference") ?? "";
+    const shortId = searchParams.get("shortId") ?? "";
 
     const handlePaymentSuccess = async () => {
         setIsProcessing(true);
         try {
-            // شبیه‌سازی تغییر وضعیت CIo به پرداخت شده
             if (shortId) {
-                await updateCioStatus({ shortId, status: 'P' }); // 'P' برای پرداخت شده
+                await updateCioStatus({ shortId, status: "P" }); // پرداخت شده
             }
 
-            // در محیط تست، مستقیماً مجوز را اعمال می‌کنیم
-            if (process.env.NODE_ENV === 'development') {
+            if (process.env.NODE_ENV === "development" && purseId && packageId && sessionId) {
                 await addPermissionAsync({
                     purseId,
-                    packageId: parseInt(packageId),
+                    packageId,
                     sessionId,
                 });
             }
 
-            // هدایت به صفحه accounts با پارامتر موفقیت
-            router.push(`/accounts?status=success&purseId=${purseId}&packageId=${packageId}&sessionId=${sessionId}&reference=${reference}&shortId=${shortId}`);
+            router.push(
+                `/accounts?status=success&purseId=${purseId}&packageId=${packageId}&sessionId=${sessionId}&reference=${reference}&shortId=${shortId}`
+            );
         } catch (error) {
             console.error("Error in payment process:", error);
-            // حتی در صورت خطا هم کاربر را به صفحه نتیجه هدایت می‌کنیم
-            router.push(`/accounts?status=failure&purseId=${purseId}&packageId=${packageId}&sessionId=${sessionId}`);
+            router.push(
+                `/accounts?status=failure&purseId=${purseId}&packageId=${packageId}&sessionId=${sessionId}`
+            );
         } finally {
             setIsProcessing(false);
         }
@@ -63,9 +62,7 @@ const BankSimulation = () => {
             <Card className="w-full max-w-md">
                 <CardHeader className="text-center">
                     <CardTitle className="text-xl">شبیه‌سازی درگاه بانکی</CardTitle>
-                    <p className="text-gray-600">
-                        لطفاً وضعیت پرداخت را انتخاب کنید
-                    </p>
+                    <p className="text-gray-600">لطفاً وضعیت پرداخت را انتخاب کنید</p>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="bg-gray-100 p-4 rounded-lg">

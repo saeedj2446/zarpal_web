@@ -1,4 +1,3 @@
-// components/accounts/AccountView.jsx
 "use client";
 
 import React from "react";

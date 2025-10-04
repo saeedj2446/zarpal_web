@@ -1,5 +1,3 @@
-// src/components/accounts/buy-package/PackageSelector.tsx
-
 "use client";
 
 import React from "react";

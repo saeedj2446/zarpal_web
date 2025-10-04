@@ -1,5 +1,3 @@
-// components/accounts/buy-package/PaymentResult.jsx
-
 "use client";
 
 import React, { useEffect } from "react";
